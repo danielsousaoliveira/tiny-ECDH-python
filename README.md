@@ -1,6 +1,6 @@
 ### Tiny ECDH in Python
 
-This is a Python implementation of the [Tiny ECDH in C](https://https://github.com/kokke/tiny-ECDH-c) 
+This is a Python implementation of the [Tiny ECDH in C](https://github.com/kokke/tiny-ECDH-c) 
 
 It's a small and portable implementation of the [Elliptic-Curve Diffie-Hellman key agreement algorithm](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) written in Python.
 
