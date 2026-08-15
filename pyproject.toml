@@ -7,7 +7,7 @@ name = "tiny-ecdh-python"
 dynamic = ["version"]
 description = "Educational ECDH implementation for the NIST B-163 curve"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 license = {file = "LICENSE"}
 dependencies = ["numpy>=1.24"]
 authors = [{name = "tiny-ECDH-python contributors"}]
@@ -35,3 +35,20 @@ version = {attr = "tiny_ecdh._version.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.tox]
+env_list = ["py39", "py310", "py311", "py312", "quality"]
+
+[tool.tox.env_run_base]
+deps = ["pytest", "numpy>=1.24"]
+commands = [["pytest", "{posargs}"]]
+
+[tool.tox.env.quality]
+skip_install = true
+deps = ["build", "ruff", "twine"]
+commands = [
+  ["ruff", "check", "."],
+  ["ruff", "format", "--check", "."],
+  ["python", "-m", "build"],
+  ["twine", "check", "dist/*"],
+]
