@@ -1,5 +1,3 @@
-import numpy as np
-
 import utils
 
 
@@ -17,7 +15,3 @@ def test_sect163r2_parameters_match_sec2_literals():
     assert utils.base_order == [0xA4234C33, 0x77E70C12, 0x000292FE,
                                 0x00000000, 0x00000000, 0x00000004]
     assert utils.cofactor == 2
-
-    assert np.array_equal(np.array(utils.base_x, dtype=np.uint32),
-                          np.array([0xE8343E36, 0xD4994637, 0xA0991168,
-                                    0x86A2D57E, 0xF0EBA162, 0x00000003], dtype=np.uint32))

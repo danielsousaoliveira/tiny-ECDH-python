@@ -1,8 +1,11 @@
 
 # Crypto using an elliptic curve defined over the finite binary field GF(2^m).
 # The implemented curve is NIST B-163, also known as SECG sect163r2.
-# Its parameters are specified in SEC 2, section 2.7.1:
+# Its parameters are specified in SEC 2, section 3.2.3:
 # https://www.secg.org/sec2-v2.pdf
+# This B-163 ECDH implementation is below current security-strength
+# requirements, is no longer approved for general use, and is limited to
+# legacy use.
 #
 # Reference:
 # https://www.ietf.org/rfc/rfc4492.txt 
