@@ -1,8 +1,7 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 from setuptools import find_packages, setup
-
 
 version_text = Path("tiny_ecdh/_version.py").read_text()
 version = re.search(r'__version__ = "([^"]+)"', version_text).group(1)

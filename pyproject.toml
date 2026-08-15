@@ -35,20 +35,3 @@ version = {attr = "tiny_ecdh._version.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.tox]
-env_list = ["py39", "py310", "py311", "py312", "quality"]
-
-[tool.tox.env_run_base]
-deps = ["pytest", "numpy>=1.24"]
-commands = [["pytest", "{posargs}"]]
-
-[tool.tox.env.quality]
-skip_install = true
-deps = ["build", "ruff", "twine"]
-commands = [
-  ["ruff", "check", "."],
-  ["ruff", "format", "--check", "."],
-  ["python", "-m", "build"],
-  ["twine", "check", "dist/*"],
-]
