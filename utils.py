@@ -1,16 +1,11 @@
 
-# Crypto using elliptic curves defined over the finite binary field GF(2^m) where m is prime.
-# The curves used are the anomalous binary curves (ABC-curves) or also called Koblitz curves.
-# This class of curves was chosen because it yields efficient implementation of operations.
-# Curves available - their different NIST/SECG names and eqivalent symmetric security level:
-#
-# NIST      SEC Group     strength
-# ------------------------------------
-# B-163     sect163k2      80 bit
-#
-# Curve parameters from:
-# http://www.secg.org/sec2-v2.pdf
-# http://csrc.nist.gov/publications/fips/fips186-3/fips_186-3.pdf
+# Crypto using an elliptic curve defined over the finite binary field GF(2^m).
+# The implemented curve is NIST B-163, also known as SECG sect163r2.
+# Its parameters are specified in SEC 2, section 3.2.3:
+# https://www.secg.org/sec2-v2.pdf
+# This B-163 ECDH implementation is below current security-strength
+# requirements, is no longer approved for general use, and is limited to
+# legacy use.
 #
 # Reference:
 # https://www.ietf.org/rfc/rfc4492.txt 
@@ -28,7 +23,7 @@ BITVEC_NBITS    = (CURVE_DEGREE + BITVEC_MARGIN)
 BITVEC_NWORDS   = (int)((BITVEC_NBITS + 31) / 32)
 BITVEC_NBYTES   = BITVEC_NWORDS * 4
 
-# NIST B-163 parameters
+# NIST B-163 / SECG sect163r2 parameters
 coeff_a     = 1
 cofactor    = 2
 polynomial  = [0x000000c9, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000008]
