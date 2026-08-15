@@ -1,0 +1,4 @@
+include LICENSE README.md
+recursive-include tests *.py
+recursive-include tiny_ecdh py.typed
+recursive-include examples *.py

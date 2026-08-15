@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tiny-ecdh-python"
+dynamic = ["version"]
+description = "Educational ECDH implementation for the NIST B-163 curve"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+dependencies = ["numpy>=1.24"]
+authors = [{name = "tiny-ECDH-python contributors"}]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Education",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Security :: Cryptography",
+]
+keywords = ["ECDH", "elliptic curve", "education"]
+urls = {Homepage = "https://github.com/kokke/tiny-ECDH-c", Repository = "https://github.com/danielsousaoliveira/tiny-ECDH-python"}
+
+[tool.setuptools]
+packages = ["tiny_ecdh"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "tiny_ecdh._version.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
