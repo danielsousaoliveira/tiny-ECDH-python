@@ -1,4 +1,4 @@
-import utils
+from tiny_ecdh import utils
 
 
 def test_sect163r2_parameters_match_sec2_literals():

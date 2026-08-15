@@ -14,7 +14,14 @@
 # https://github.com/kokke/tiny-ECDH-c
 
 import numpy as np
-from utils import *
+
+from .utils import (
+    BITVEC_NWORDS, CURVE_DEGREE, base_order, base_x, base_y,
+    bitvec_clr_bit, bitvec_degree, gf2point_copy, gf2point_is_zero,
+    gf2point_mul, gf2point_on_curve,
+)
+
+__all__ = ["ecdh_generate_keys", "ecdh_shared_secret"]
 
 # -------------------------------------------------------------------
 # Elliptic Curve Diffie-Hellman key exchange protocol.

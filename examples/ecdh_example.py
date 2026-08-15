@@ -14,7 +14,7 @@
 # https://github.com/kokke/tiny-ECDH-c
 
 import numpy as np
-from ecdh import *
+from tiny_ecdh import ecdh_generate_keys, ecdh_shared_secret
 
 def main():
 
@@ -58,5 +58,4 @@ def main():
         
 if __name__ == "__main__":
     main()
-
 
