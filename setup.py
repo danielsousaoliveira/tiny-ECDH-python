@@ -1,8 +1,7 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 from setuptools import find_packages, setup
-
 
 version_text = Path("tiny_ecdh/_version.py").read_text()
 version = re.search(r'__version__ = "([^"]+)"', version_text).group(1)
@@ -16,7 +15,7 @@ setup(
     url="https://github.com/danielsousaoliveira/tiny-ECDH-python",
     author="tiny-ECDH-python contributors",
     packages=find_packages(),
-    python_requires=">=3.9",
+    python_requires=">=3.9,<3.13",
     install_requires=["numpy>=1.24"],
     include_package_data=True,
 )

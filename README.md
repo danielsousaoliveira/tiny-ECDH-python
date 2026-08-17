@@ -55,3 +55,14 @@ assert aliceSharedKey == bobSharedKey
 
 - Add more NIST curves
 - Create a more pythonic alternative
+# Development checks
+
+Run the complete local gate with:
+
+```sh
+python -m pip install tox
+python -m tox
+```
+
+This runs the test suite on Python 3.9–3.12 and, in the quality environment, checks linting,
+formatting, the source and wheel builds, and artifact metadata.

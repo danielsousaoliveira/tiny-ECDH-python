@@ -7,7 +7,7 @@ name = "tiny-ecdh-python"
 dynamic = ["version"]
 description = "Educational ECDH implementation for the NIST B-163 curve"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 license = {file = "LICENSE"}
 dependencies = ["numpy>=1.24"]
 authors = [{name = "tiny-ECDH-python contributors"}]
