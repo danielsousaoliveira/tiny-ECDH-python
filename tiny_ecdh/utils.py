@@ -125,13 +125,10 @@ def bitvec_lshift(x, y, nbits):
 
     # Shift whole words first if nwords > 0
     nwords = nbits // 32
-    for i in range(nwords):
-        # Zero-initialize from least-significant word until offset reached
-        x[i] = 0
-
-    # Copy to x output
-    for i, j in enumerate(range(nwords, BITVEC_NWORDS)):
-        x[i] = y[j]
+    source = y.copy()
+    x[:] = 0
+    if nwords < BITVEC_NWORDS:
+        x[nwords:] = source[: BITVEC_NWORDS - nwords]
 
     # Shift the rest if count was not multiple of bitsize of DTYPE
     nbits &= 31
@@ -282,20 +279,20 @@ def gf2point_is_zero(x, y):
 def gf2point_double(x, y):
     """Double the point (x,y)"""
 
-    l = np.zeros(6, dtype="u4")
+    slope = np.zeros(6, dtype="u4")
     if bitvec_is_zero(x):
         y = bitvec_set_zero(y)
     else:
-        l = gf2field_inv(l, x)
-        l = gf2field_mul(l, l, y)
-        l = gf2field_add(l, l, x)
+        slope = gf2field_inv(slope, x)
+        slope = gf2field_mul(slope, slope, y)
+        slope = gf2field_add(slope, slope, x)
         y = gf2field_mul(y, x, x)
-        x = gf2field_mul(x, l, l)
+        x = gf2field_mul(x, slope, slope)
         if coeff_a == 1:
-            l = gf2field_inc(l)
-        x = gf2field_add(x, x, l)
-        l = gf2field_mul(l, l, x)
-        y = gf2field_add(y, y, l)
+            slope = gf2field_inc(slope)
+        x = gf2field_add(x, x, slope)
+        slope = gf2field_mul(slope, slope, x)
+        y = gf2field_add(y, y, slope)
 
     return x, y
 

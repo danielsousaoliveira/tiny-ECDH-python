@@ -1,4 +1,25 @@
+import numpy as np
+
 from tiny_ecdh import utils
+
+
+def test_bitvec_lshift_preserves_word_order_for_word_shifts():
+    value = np.array([1, 2, 3, 4, 5, 6], dtype=np.uint32)
+    output = np.zeros_like(value)
+
+    utils.bitvec_lshift(output, value, 32)
+    assert output.tolist() == [0, 1, 2, 3, 4, 5]
+
+    utils.bitvec_lshift(output, value, 64)
+    assert output.tolist() == [0, 0, 1, 2, 3, 4]
+
+
+def test_gf2field_inverse_uses_correct_shift_order():
+    value = np.array(utils.base_x, dtype=np.uint32)
+    inverse = utils.gf2field_inv(np.zeros(6, dtype=np.uint32), value)
+    product = utils.gf2field_mul(np.zeros(6, dtype=np.uint32), value, inverse)
+
+    assert product.tolist() == [1, 0, 0, 0, 0, 0]
 
 
 def test_sect163r2_parameters_match_sec2_literals():
