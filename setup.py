@@ -16,6 +16,6 @@ setup(
     author="tiny-ECDH-python contributors",
     packages=find_packages(),
     python_requires=">=3.9,<3.13",
-    install_requires=["numpy>=1.24"],
+    install_requires=["numpy>=1.24,<3"],
     include_package_data=True,
 )

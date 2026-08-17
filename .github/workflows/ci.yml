@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   tests:
-    name: Tests (Python ${{ matrix.python-version }})
+    name: Tests (${{ matrix.tox-env }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -23,6 +23,10 @@ jobs:
             tox-env: py311
           - python-version: "3.12"
             tox-env: py312
+          - python-version: "3.11"
+            tox-env: numpy1
+          - python-version: "3.11"
+            tox-env: numpy2
     steps:
       - uses: actions/checkout@v4
         with:
