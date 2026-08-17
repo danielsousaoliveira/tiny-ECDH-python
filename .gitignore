@@ -1,3 +1,7 @@
+# Agent instructions (local only)
+AGENTS.md
+CLAUDE.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,3 +131,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+tickets/
