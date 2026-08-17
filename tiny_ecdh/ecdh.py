@@ -44,12 +44,15 @@ def ecdh_generate_keys(private_key, public_key):
     """
 
     # Get copy of "base" point 'G'
-    pub1, pub2 = gf2point_copy(public_key[:6], public_key[6:], base_x, base_y)
+    pub1 = np.zeros(6, dtype="u4")
+    pub2 = np.zeros(6, dtype="u4")
+    pub1, pub2 = gf2point_copy(pub1, pub2, base_x, base_y)
 
     # Abort key generation if random number is too small
     if bitvec_degree(private_key) < (CURVE_DEGREE // 2):
         return None, None
     else:
+        private_key = private_key.copy()
         nbits = bitvec_degree(base_order)
         for i in range(nbits - 1, BITVEC_NWORDS * 32):
             # Clear bits > CURVE_DEGREE in highest word to satisfy constraint 1 <= exp < n
@@ -69,16 +72,11 @@ def ecdh_shared_secret(private_key, others_pub):
         np.uint32[]: Shared key
     """
 
-    output = np.zeros(12, dtype="u4")
-    others1 = others_pub[:6]
-    others2 = others_pub[6:]
+    others1 = others_pub[:6].copy()
+    others2 = others_pub[6:].copy()
 
     # Do some basic validation of other party's public key
     if not gf2point_is_zero(others1, others2) and gf2point_on_curve(others1, others2):
-        for i in range(12):
-            # Copy other side's public key to output
-            output[i] = others_pub[i]
-
         # Multiply other side's public key with own private key
         others1, others2 = gf2point_mul(others1, others2, private_key)
         output = np.append(others1, others2)

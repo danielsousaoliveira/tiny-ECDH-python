@@ -46,7 +46,8 @@ def bitvec_get_bit(x, idx):
 def bitvec_clr_bit(x, idx):
     """Clear bit of index idx"""
 
-    x[idx // 32] &= ~(1 << (idx & 31))
+    mask = np.uint32(1 << (idx & 31))
+    x[idx // 32] &= ~mask
 
     return x
 
