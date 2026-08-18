@@ -1,86 +1,27 @@
-# Crypto using an elliptic curve defined over the finite binary field GF(2^m).
-# The implemented curve is NIST B-163, also known as SECG sect163r2.
-# Its parameters are specified in SEC 2, section 3.2.3:
-# https://www.secg.org/sec2-v2.pdf
-# This B-163 ECDH implementation is below current security-strength
-# requirements, is no longer approved for general use, and is limited to
-# legacy use.
-#
-# Reference:
-# https://www.ietf.org/rfc/rfc4492.txt
-#
-# Original Version:
-# https://github.com/kokke/tiny-ECDH-c
+"""Educational ECDH entry points for the NIST B-163 curve."""
 
-import numpy as np
-
-from .utils import (
-    BITVEC_NWORDS,
-    CURVE_DEGREE,
-    base_order,
-    base_x,
-    base_y,
-    bitvec_clr_bit,
-    bitvec_degree,
-    gf2point_copy,
-    gf2point_is_zero,
-    gf2point_mul,
-    gf2point_on_curve,
-)
+from .utils import CURVE, gf2point_is_zero, gf2point_mul, gf2point_on_curve
 
 __all__ = ["ecdh_generate_keys", "ecdh_shared_secret"]
 
-# -------------------------------------------------------------------
-# Elliptic Curve Diffie-Hellman key exchange protocol.
-# -------------------------------------------------------------------
+
+def ecdh_generate_keys(private_key: int):
+    """Return the private scalar and its public point as integer tuples."""
+    private_key %= CURVE.order
+    if private_key < 2**80:
+        raise ValueError("private key must be at least 2**80")
+    return private_key, gf2point_mul(CURVE.base_x, CURVE.base_y, private_key)
 
 
-def ecdh_generate_keys(private_key, public_key):
-    """Generate public key based on a random private key defined earlier
-
-    Returns:
-        np.uint32[]: Clear private key
-        np.uint32[]: Associated public key
-    """
-
-    # Get copy of "base" point 'G'
-    pub1 = np.zeros(6, dtype="u4")
-    pub2 = np.zeros(6, dtype="u4")
-    pub1, pub2 = gf2point_copy(pub1, pub2, base_x, base_y)
-
-    # Abort key generation if random number is too small
-    if bitvec_degree(private_key) < (CURVE_DEGREE // 2):
-        return None, None
-    else:
-        private_key = private_key.copy()
-        nbits = bitvec_degree(base_order)
-        for i in range(nbits - 1, BITVEC_NWORDS * 32):
-            # Clear bits > CURVE_DEGREE in highest word to satisfy constraint 1 <= exp < n
-            private_key = bitvec_clr_bit(private_key, i)
-
-        # Multiply base-point with scalar (private-key)
-        pub1, pub2 = gf2point_mul(pub1, pub2, private_key)
-        public_key = np.append(pub1, pub2)
-
-        return private_key, public_key
-
-
-def ecdh_shared_secret(private_key, others_pub):
-    """Calculate shared key between two parties
-
-    Returns:
-        np.uint32[]: Shared key
-    """
-
-    others1 = others_pub[:6].copy()
-    others2 = others_pub[6:].copy()
-
-    # Do some basic validation of other party's public key
-    if not gf2point_is_zero(others1, others2) and gf2point_on_curve(others1, others2):
-        # Multiply other side's public key with own private key
-        others1, others2 = gf2point_mul(others1, others2, private_key)
-        output = np.append(others1, others2)
-
-        return output
-    else:
+def ecdh_shared_secret(private_key: int, others_pub: tuple[int, int]):
+    """Derive a peer point without mutating the caller's public point."""
+    x, y = others_pub
+    if (
+        not (0 <= x < 2**CURVE.degree and 0 <= y < 2**CURVE.degree)
+        or x == 0
+        or gf2point_is_zero(x, y)
+        or not gf2point_on_curve(x, y)
+        or not gf2point_is_zero(*gf2point_mul(x, y, CURVE.order))
+    ):
         return None
+    return gf2point_mul(x, y, private_key)
