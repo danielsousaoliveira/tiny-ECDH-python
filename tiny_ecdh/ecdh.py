@@ -1,21 +1,26 @@
 """Educational ECDH entry points for the NIST B-163 curve."""
 
+from .errors import InvalidPrivateKeyError, InvalidPublicKeyError
+from .keys import PrivateKey, PublicKey, SharedSecret
 from .utils import CURVE, gf2point_is_zero, gf2point_mul, gf2point_on_curve
 
 __all__ = ["ecdh_generate_keys", "ecdh_shared_secret"]
 
 
-def ecdh_generate_keys(private_key: int):
-    """Return the private scalar and its public point as integer tuples."""
-    private_key %= CURVE.order
-    if private_key < 2**80:
-        raise ValueError("private key must be at least 2**80")
-    return private_key, gf2point_mul(CURVE.base_x, CURVE.base_y, private_key)
+def ecdh_generate_keys(scalar: int) -> tuple[PrivateKey, PublicKey]:
+    """Return a private key and its public point for the given scalar."""
+    scalar %= CURVE.order
+    if scalar < 2**80:
+        raise InvalidPrivateKeyError("private key must be at least 2**80")
+    x, y = gf2point_mul(CURVE.base_x, CURVE.base_y, scalar)
+    return PrivateKey(scalar), PublicKey(x, y)
 
 
-def ecdh_shared_secret(private_key: int, others_pub: tuple[int, int]):
-    """Derive a peer point without mutating the caller's public point."""
-    x, y = others_pub
+def ecdh_shared_secret(
+    private_key: PrivateKey, peer_public_key: PublicKey
+) -> SharedSecret:
+    """Derive the shared secret point for ``private_key`` and a peer's public key."""
+    x, y = peer_public_key.x, peer_public_key.y
     if (
         not (0 <= x < 2**CURVE.degree and 0 <= y < 2**CURVE.degree)
         or x == 0
@@ -23,5 +28,6 @@ def ecdh_shared_secret(private_key: int, others_pub: tuple[int, int]):
         or not gf2point_on_curve(x, y)
         or not gf2point_is_zero(*gf2point_mul(x, y, CURVE.order))
     ):
-        return None
-    return gf2point_mul(x, y, private_key)
+        raise InvalidPublicKeyError("peer public key failed validation")
+    secret_x, secret_y = gf2point_mul(x, y, private_key.scalar)
+    return SharedSecret(secret_x, secret_y)
