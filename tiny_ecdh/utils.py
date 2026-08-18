@@ -141,22 +141,94 @@ def _select_point(
     )
 
 
+def _unified_double(x: int, y: int) -> tuple[int, int]:
+    """Point doubling that always does the same field operations.
+
+    ``gf2point_double`` branches on whether ``(x, y)`` is the identity, to
+    avoid inverting zero. Here that case is instead selected away after
+    always computing the ordinary-point formula against a substituted safe
+    input, so the call shape doesn't depend on which case applies.
+    """
+    is_identity = int(bitvec_is_zero(x))
+    safe_x = _select_int(is_identity, 1, x)
+    slope = gf2field_add(gf2field_mul(y, gf2field_inv(safe_x)), safe_x)
+    new_x = gf2field_add(gf2field_add(gf2field_mul(slope, slope), slope), CURVE.a)
+    new_y = gf2field_add(
+        gf2field_mul(x, x), gf2field_mul(gf2field_add(slope, 1), new_x)
+    )
+    return _select_point(is_identity, (0, 0), (new_x, new_y))
+
+
+def _unified_add(x1: int, y1: int, x2: int, y2: int) -> tuple[int, int]:
+    """Point addition that always does the same field operations.
+
+    ``gf2point_add`` branches four ways (either operand the identity, equal
+    x-coordinates doubling, equal x-coordinates summing to the identity,
+    the general case), and the equal-x case recurses into a doubling call —
+    which is why the plain double-and-add-always ladder still leaked: how
+    often the running total coincides with the point being added is
+    scalar-dependent, and each coincidence added an extra doubling call.
+    Here every case is always computed, against inputs substituted to keep
+    the field inversion from ever dividing by zero, and the right one is
+    selected without a Python-level branch.
+    """
+    x1_is_identity = int(gf2point_is_zero(x1, y1))
+    x2_is_identity = int(gf2point_is_zero(x2, y2))
+    same_x = int(x1 == x2)
+    same_y = int(y1 == y2)
+    is_doubling = same_x & same_y
+    sums_to_identity = same_x & (1 - same_y)
+
+    denom = gf2field_add(x1, x2)
+    safe_denom = _select_int(same_x, 1, denom)
+    slope = gf2field_mul(gf2field_add(y1, y2), gf2field_inv(safe_denom))
+    generic_x = gf2field_add(
+        gf2field_add(gf2field_mul(slope, slope), slope),
+        gf2field_add(x1, gf2field_add(x2, CURVE.a)),
+    )
+    generic_y = gf2field_add(
+        gf2field_mul(slope, gf2field_add(x1, generic_x)), gf2field_add(generic_x, y1)
+    )
+
+    doubled = _unified_double(x1, y1)
+    result = _select_point(
+        is_doubling,
+        doubled,
+        _select_point(sums_to_identity, (0, 0), (generic_x, generic_y)),
+    )
+    result = _select_point(x2_is_identity, (x1, y1), result)
+    result = _select_point(x1_is_identity, (x2, y2), result)
+    return result
+
+
+def _double_and_add_always(x: int, y: int, exp: int, bit_width: int) -> tuple[int, int]:
+    result = gf2point_set_zero()
+    for bit_index in range(bit_width - 1, -1, -1):
+        result = _unified_double(*result)
+        added = _unified_add(*result, x, y)
+        result = _select_point(bitvec_get_bit(exp, bit_index), added, result)
+    return result
+
+
 def gf2point_mul(x: int, y: int, exp: int) -> tuple[int, int]:
     """Multiply a point; educational only, not suitable for production.
 
-    Always runs ``CURVE.degree`` double-and-add-always iterations, so the
-    iteration count and the sequence of operations do not depend on ``exp``.
-    This does not make the implementation constant-time: field inversion
-    (called from every double and add) is variable-time extended-Euclid, and
-    the interpreter's own arbitrary-precision arithmetic takes time that
-    varies with operand size. Those leaks are out of scope for this function.
+    Always runs ``CURVE.degree`` double-and-add-always iterations built from
+    ``_unified_double``/``_unified_add``, so both the iteration count and the
+    field operations performed each iteration are the same for every ``exp``:
+    which of ``_unified_add``'s internal cases applies (identity operand,
+    doubling, summing to the identity, or the general case) only changes
+    which precomputed candidate a branch-free select picks, never how much
+    work is done or which functions are called.
+
+    This does not make the implementation constant-time. Field inversion
+    (called once per ``_unified_double`` and once per ``_unified_add``, so
+    twice per iteration here) is variable-time extended-Euclid, and the
+    interpreter's own arbitrary-precision arithmetic takes time that varies
+    with operand size. Both are data-dependent regardless of how this
+    function is shaped, and closing them is out of scope for this function.
     """
-    result = gf2point_set_zero()
-    for bit_index in range(CURVE.degree - 1, -1, -1):
-        result = gf2point_double(*result)
-        added = gf2point_add(*result, x, y)
-        result = _select_point(bitvec_get_bit(exp, bit_index), added, result)
-    return result
+    return _double_and_add_always(x, y, exp, CURVE.degree)
 
 
 def gf2point_on_curve(x: int, y: int) -> bool:

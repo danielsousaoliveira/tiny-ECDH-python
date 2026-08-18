@@ -53,14 +53,21 @@ assert aliceSharedKey == bobSharedKey
 ### Timing limitations
 
 Scalar multiplication always runs the same fixed number of double-and-add-always
-iterations and never branches on a bit of the secret scalar, so it no longer
-leaks the scalar's bit length or Hamming weight through the iteration count.
-This is not the same as constant-time, and the package must not be described
-that way:
+iterations, and each iteration always performs the same field operations in the
+same order regardless of the scalar: point doubling and addition are built from
+branch-free variants that always compute every case (identity operand, the
+doubling case, points summing to the identity, the general case) and select the
+right result arithmetically, instead of branching to a cheaper or more expensive
+path. So the implementation no longer leaks the scalar's bit length, Hamming
+weight, or the position of any coincidence between the running total and the
+point being added. This is not the same as constant-time, and the package must
+not be described that way:
 
 - Field inversion (`gf2field_inv`) is still variable-time extended-Euclid; its
   running time depends on the field element being inverted, and it is called
-  from every point doubling and addition. Fixing this is tracked separately.
+  from every point doubling and addition — twice per iteration, always, but
+  each call's own running time still varies with its input. Fixing this is
+  tracked separately.
 - Python's arbitrary-precision integers do not execute in fixed time for a
   fixed bit width — operations on operands of different magnitude take
   different amounts of interpreter time regardless of how the algorithm above
