@@ -69,6 +69,12 @@ is kept only for teaching value and comparison against the original C implementa
 deliberately named so that reading it instead of calling `derive_key` is a visible decision, not
 the normal path.
 
+Deriving the key this way makes it uniformly distributed, but it does **not** authenticate who
+you derived it with: ECDH as implemented here is unauthenticated key agreement, so `bobPubKey`
+could belong to an attacker impersonating Bob. Verify the peer's public key and the handshake
+transcript through some other channel (a signature, a certificate, an out-of-band fingerprint
+check) before trusting that a derived key is shared with the party you intended.
+
 ### Timing limitations
 
 Scalar multiplication always runs the same fixed number of double-and-add-always
