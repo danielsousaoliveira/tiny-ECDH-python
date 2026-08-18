@@ -1,379 +1,135 @@
-# Crypto using an elliptic curve defined over the finite binary field GF(2^m).
-# The implemented curve is NIST B-163, also known as SECG sect163r2.
-# Its parameters are specified in SEC 2, section 3.2.3:
-# https://www.secg.org/sec2-v2.pdf
-# This B-163 ECDH implementation is below current security-strength
-# requirements, is no longer approved for general use, and is limited to
-# legacy use.
-#
-# Reference:
-# https://www.ietf.org/rfc/rfc4492.txt
-#
-# Original Version:
-# https://github.com/kokke/tiny-ECDH-c
+"""Integer arithmetic for the educational NIST B-163 implementation."""
 
-import numpy as np
-
-# Bit vectors size definition
-# Margin for overhead needed in intermediate calculations
-CURVE_DEGREE = 163
-BITVEC_MARGIN = 3
-BITVEC_NBITS = CURVE_DEGREE + BITVEC_MARGIN
-BITVEC_NWORDS = (int)((BITVEC_NBITS + 31) / 32)
-BITVEC_NBYTES = BITVEC_NWORDS * 4
-
-# NIST B-163 / SECG sect163r2 parameters
-coeff_a = 1
-cofactor = 2
-polynomial = [0x000000C9, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000008]
-base_x = [0xE8343E36, 0xD4994637, 0xA0991168, 0x86A2D57E, 0xF0EBA162, 0x00000003]
-base_y = [0x797324F1, 0xB11C5C0C, 0xA2CDD545, 0x71A0094F, 0xD51FBC6C, 0x00000000]
-base_order = [0xA4234C33, 0x77E70C12, 0x000292FE, 0x00000000, 0x00000000, 0x00000004]
-coeff_b = [0x4A3205FD, 0x512F7874, 0x1481EB10, 0xB8C953CA, 0x0A601907, 0x00000002]
-
-# -------------------------------------------------------------------
-# Some basic bit-manipulation routines that act on bit-vectors follow
-# Most of them aren't needed in Python
-# -------------------------------------------------------------------
+from dataclasses import dataclass
 
 
-def bitvec_get_bit(x, idx):
-    """Get bit of index idx"""
-
-    return (x[idx // 32] >> (idx & 31)) & 1
-
-
-def bitvec_clr_bit(x, idx):
-    """Clear bit of index idx"""
-
-    mask = np.uint32(1 << (idx & 31))
-    x[idx // 32] &= ~mask
-
-    return x
+@dataclass(frozen=True)
+class Curve:
+    degree: int
+    polynomial: int
+    a: int
+    b: int
+    base_x: int
+    base_y: int
+    order: int
+    cofactor: int
 
 
-def bitvec_copy(x, y):
-    """Return a copy of the bit vector"""
+CURVE = Curve(
+    degree=163,
+    polynomial=(1 << 163) | (1 << 7) | (1 << 6) | (1 << 3) | 1,
+    a=1,
+    b=0x020A601907B8C953CA1481EB10512F78744A3205FD,
+    base_x=0x00000003F0EBA16286A2D57EA0991168D4994637E8343E36,
+    base_y=0x00000000D51FBC6C71A0094FA2CDD545B11C5C0C797324F1,
+    order=0x040000000000000000000292FE77E70C12A4234C33,
+    cofactor=2,
+)
 
-    for i in range(len(y)):
-        x[i] = y[i]
+CURVE_DEGREE = CURVE.degree
+polynomial = CURVE.polynomial
+coeff_a = CURVE.a
+coeff_b = CURVE.b
+base_x = CURVE.base_x
+base_y = CURVE.base_y
+base_order = CURVE.order
+cofactor = CURVE.cofactor
 
-    return x
+
+def bitvec_get_bit(x: int, idx: int) -> int:
+    return (x >> idx) & 1
 
 
-def bitvec_swap(x, y):
-    """Swap bit vectors"""
+def bitvec_degree(x: int) -> int:
+    return x.bit_length()
 
-    tmp = x.copy()
-    x = bitvec_copy(x, y)
-    y = bitvec_copy(y, tmp)
 
+def bitvec_is_zero(x: int) -> bool:
+    return x == 0
+
+
+def gf2field_add(x: int, y: int) -> int:
+    return x ^ y
+
+
+def gf2field_inc(x: int) -> int:
+    return x ^ 1
+
+
+def gf2field_mul(x: int, y: int) -> int:
+    result = 0
+    while y:
+        if y & 1:
+            result ^= x
+        y >>= 1
+        x <<= 1
+        if x >> CURVE_DEGREE:
+            x ^= polynomial
+    return result
+
+
+def gf2field_inv(x: int) -> int:
+    if x == 0:
+        raise ZeroDivisionError("cannot invert zero")
+    u, v = x, polynomial
+    g1, g2 = 1, 0
+    while u != 1:
+        shift = u.bit_length() - v.bit_length()
+        if shift < 0:
+            u, v = v, u
+            g1, g2 = g2, g1
+            shift = -shift
+        u ^= v << shift
+        g1 ^= g2 << shift
+    return g1
+
+
+def gf2point_is_zero(x: int, y: int) -> bool:
+    return x == 0 and y == 0
+
+
+def gf2point_set_zero() -> tuple[int, int]:
+    return 0, 0
+
+
+def gf2point_copy(x: int, y: int) -> tuple[int, int]:
     return x, y
 
 
-def bitvec_equal(x, y):
-    """Check if bit vectors are equal"""
-
-    for i in range(len(x)):
-        if x[i] != y[i]:
-            return False
-
-    return True
-
-
-def bitvec_set_zero(x):
-    """Set bit vector to 0"""
-
-    for i in range(len(x)):
-        x[i] = 0
-
-    return x
-
-
-def bitvec_is_zero(x):
-    """Check if bit vector is 0"""
-
-    for i in x:
-        if i != 0:
-            return False
-
-    return True
-
-
-def bitvec_degree(x):
-    """Returns the number of the highest one-bit + 1"""
-
-    i = BITVEC_NWORDS * 32
-    u = BITVEC_NWORDS
-
-    # Start at the back of the vector and skip empty/zero words
-    while (i > 0) and (x[u - 1] == 0):
-        i -= 32
-        u -= 1
-
-    # Run through rest if count is not multiple of bitsize of DTYPE
-    if i != 0:
-        u32mask = np.uint32(1 << 31)
-        while (x[u - 1] & u32mask) == 0:
-            u32mask >>= 1
-            i -= 1
-
-    return i
-
-
-def bitvec_lshift(x, y, nbits):
-    """Left shift by n bits"""
-
-    # Shift whole words first if nwords > 0
-    nwords = nbits // 32
-    source = y.copy()
-    x[:] = 0
-    if nwords < BITVEC_NWORDS:
-        x[nwords:] = source[: BITVEC_NWORDS - nwords]
-
-    # Shift the rest if count was not multiple of bitsize of DTYPE
-    nbits &= 31
-    if nbits != 0:
-        for i in range(BITVEC_NWORDS - 1, 0, -1):
-            x[i] = (x[i] << nbits) | (x[i - 1] >> (32 - nbits))
-        x[0] <<= nbits
-
-    return x
-
-
-# -------------------------------------------------------------------------------
-# Code that does arithmetic on bit-vectors in the Galois Field GF(2^CURVE_DEGREE)
-# -------------------------------------------------------------------------------
-
-
-def gf2field_set_one(x):
-    """Set first word to one and the rest to zero"""
-
-    x[0] = 1
-    for i in range(1, BITVEC_NWORDS):
-        x[i] = 0
-
-    return x
-
-
-def gf2field_is_one(x):
-    """Check if the bit vector is == 1"""
-
-    if x[0] != 1:
-        return False
-    else:
-        for i in range(1, BITVEC_NWORDS):
-            if x[i] != 0:
-                return False
-        return True
-
-
-def gf2field_add(z, x, y):
-    """Galois field(2^m) addition is modulo 2, so XOR is used instead - 'z := a + b'"""
-
-    for i in range(BITVEC_NWORDS):
-        z[i] = x[i] ^ y[i]
-
-    return z
-
-
-def gf2field_inc(x):
-    """Increment element"""
-
-    x[0] ^= 1
-
-    return x
-
-
-def gf2field_mul(z, x, y):
-    """Field multiplication 'z := (x * y)'"""
-
-    tmp = np.zeros(6, dtype="u4")
-    tmp = bitvec_copy(tmp, x)
-
-    # If LSB is set, start with x
-    if bitvec_get_bit(y, 0) != 0:
-        z = bitvec_copy(z, x)
-    else:
-        # Else start with zero
-        z = bitvec_set_zero(z)
-
-    # Then add 2^i * x for the rest
-    for i in range(1, CURVE_DEGREE):
-        # Lshift 1 - doubling the value of tmp
-        tmp = bitvec_lshift(tmp, tmp, 1)
-
-        # Module reduction polynomial if degree(tmp) > CURVE_DEGREE
-        if bitvec_get_bit(tmp, CURVE_DEGREE):
-            tmp = gf2field_add(tmp, tmp, polynomial)
-
-        # Add 2^i * tmp if this factor in y is non-zero
-        if bitvec_get_bit(y, i):
-            z = gf2field_add(z, z, tmp)
-
-    return z
-
-
-def gf2field_inv(z, x):
-    """Field inversion 'z := 1/x'"""
-
-    u = np.zeros(6, dtype="u4")
-    v = u.copy()
-    g = u.copy()
-    h = u.copy()
-
-    u = bitvec_copy(u, x)
-    v = bitvec_copy(v, polynomial)
-    g = bitvec_set_zero(g)
-    z = gf2field_set_one(z)
-
-    while not gf2field_is_one(u):
-        i = bitvec_degree(u) - bitvec_degree(v)
-
-        if i < 0:
-            u, v = bitvec_swap(u, v)
-            g, z = bitvec_swap(g, z)
-            i = -i
-
-        h = bitvec_lshift(h, v, i)
-        u = gf2field_add(u, u, h)
-        h = bitvec_lshift(h, g, i)
-        z = gf2field_add(z, z, h)
-
-    return z
-
-
-# -----------------------------------------------------------------------
-# The following code takes care of Galois-Field arithmetic.
-# Elliptic curve points are represented  by pairs (x,y) of bitvec_t.
-# It is assumed that curve coefficient 'a' is {0,1}
-# This is the case for all NIST binary curves.
-# Coefficient 'b' is given in 'coeff_b'.
-# '(base_x, base_y)' is a point that generates a large prime order group.
-# -----------------------------------------------------------------------
-
-
-def gf2point_copy(x1, y1, x2, y2):
-    """Copy point (x,y)"""
-
-    x1 = bitvec_copy(x1, x2)
-    y1 = bitvec_copy(y1, y2)
-
-    return x1, y1
-
-
-def gf2point_set_zero(x, y):
-    """Set point (x,y) to zero"""
-
-    x = bitvec_set_zero(x)
-    y = bitvec_set_zero(y)
-
-    return x, y
-
-
-def gf2point_is_zero(x, y):
-    """Check if the point (x,y) is zero"""
-
-    return bitvec_is_zero(x) and bitvec_is_zero(y)
-
-
-def gf2point_double(x, y):
-    """Double the point (x,y)"""
-
-    slope = np.zeros(6, dtype="u4")
-    if bitvec_is_zero(x):
-        y = bitvec_set_zero(y)
-    else:
-        slope = gf2field_inv(slope, x)
-        slope = gf2field_mul(slope, slope, y)
-        slope = gf2field_add(slope, slope, x)
-        y = gf2field_mul(y, x, x)
-        x = gf2field_mul(x, slope, slope)
-        if coeff_a == 1:
-            slope = gf2field_inc(slope)
-        x = gf2field_add(x, x, slope)
-        slope = gf2field_mul(slope, slope, x)
-        y = gf2field_add(y, y, slope)
-
-    return x, y
-
-
-def gf2point_add(x1, y1, x2, y2):
-    """Add two points together (x1, y1) := (x1, y1) + (x2, y2)"""
-
-    a = np.zeros(6, dtype="u4")
-    b = a.copy()
-    c = a.copy()
-    d = a.copy()
-
-    if not gf2point_is_zero(x2, y2):
-        if gf2point_is_zero(x1, y1):
-            x1, y1 = gf2point_copy(x1, y1, x2, y2)
-        else:
-            if bitvec_equal(x1, x2):
-                if bitvec_equal(y1, y2):
-                    x1, y1 = gf2point_double(x1, y1)
-                else:
-                    x1, y1 = gf2point_set_zero(x1, y1)
-            else:
-                a = gf2field_add(a, y1, y2)
-                b = gf2field_add(b, x1, x2)
-                c = gf2field_inv(c, b)
-                c = gf2field_mul(c, c, a)
-                d = gf2field_mul(d, c, c)
-                d = gf2field_add(d, d, c)
-                d = gf2field_add(d, d, b)
-                if coeff_a == 1:
-                    d = gf2field_inc(d)
-                x1 = gf2field_add(x1, x1, d)
-                a = gf2field_mul(a, x1, c)
-                a = gf2field_add(a, a, d)
-                y1 = gf2field_add(y1, y1, a)
-                x1 = bitvec_copy(x1, d)
-
-    return x1, y1
-
-
-def gf2point_mul(x, y, exp):
-    """Point multiplication via double-and-add algorithm"""
-
-    tmpx = np.zeros(6, dtype="u4")
-    tmpy = tmpx.copy()
-
-    nbits = bitvec_degree(exp)
-    tmpx, tmpy = gf2point_set_zero(tmpx, tmpy)
-
-    for i in range(nbits - 1, -1, -1):
-        tmpx, tmpy = gf2point_double(tmpx, tmpy)
-
-        if bitvec_get_bit(exp, i):
-            tmpx, tmpy = gf2point_add(tmpx, tmpy, x, y)
-
-    x, y = gf2point_copy(x, y, tmpx, tmpy)
-
-    return x, y
-
-
-def gf2point_on_curve(x, y):
-    """Check if y^2 + x*y = x^3 + a*x^2 + coeff_b holds"""
-
-    a = np.zeros(6, dtype="u4")
-    b = a.copy()
-
+def gf2point_double(x: int, y: int) -> tuple[int, int]:
+    if x == 0:
+        return 0, 0
+    slope = gf2field_add(gf2field_mul(y, gf2field_inv(x)), x)
+    new_x = gf2field_add(gf2field_add(gf2field_mul(slope, slope), slope), CURVE.a)
+    new_y = gf2field_add(gf2field_mul(x, x), gf2field_mul(gf2field_add(slope, 1), new_x))
+    return new_x, new_y
+
+
+def gf2point_add(x1: int, y1: int, x2: int, y2: int) -> tuple[int, int]:
+    if gf2point_is_zero(x2, y2):
+        return x1, y1
+    if gf2point_is_zero(x1, y1):
+        return x2, y2
+    if x1 == x2:
+        return gf2point_double(x1, y1) if y1 == y2 else (0, 0)
+    slope = gf2field_mul(gf2field_add(y1, y2), gf2field_inv(gf2field_add(x1, x2)))
+    new_x = gf2field_add(gf2field_add(gf2field_mul(slope, slope), slope), gf2field_add(x1, gf2field_add(x2, CURVE.a)))
+    new_y = gf2field_add(gf2field_mul(slope, gf2field_add(x1, new_x)), gf2field_add(new_x, y1))
+    return new_x, new_y
+
+
+def gf2point_mul(x: int, y: int, exp: int) -> tuple[int, int]:
+    result = (0, 0)
+    for bit in range(exp.bit_length() - 1, -1, -1):
+        result = gf2point_double(*result)
+        if exp & (1 << bit):
+            result = gf2point_add(*result, x, y)
+    return result
+
+
+def gf2point_on_curve(x: int, y: int) -> bool:
     if gf2point_is_zero(x, y):
         return True
-    else:
-        a = gf2field_mul(a, x, x)
-
-        if coeff_a == 0:
-            a = gf2field_mul(a, a, x)
-        else:
-            b = gf2field_mul(b, a, x)
-            a = gf2field_add(a, a, b)
-
-        a = gf2field_add(a, a, np.array(coeff_b, dtype=np.uint32))
-        b = gf2field_mul(b, y, y)
-        a = gf2field_add(a, a, b)
-        b = gf2field_mul(b, x, y)
-
-        return bitvec_equal(a, b)
+    left = gf2field_add(gf2field_mul(y, y), gf2field_mul(x, y))
+    right = gf2field_add(gf2field_add(gf2field_mul(gf2field_mul(x, x), x), gf2field_mul(CURVE.a, gf2field_mul(x, x))), CURVE.b)
+    return left == right
