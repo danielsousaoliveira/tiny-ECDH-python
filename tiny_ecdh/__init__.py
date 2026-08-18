@@ -12,6 +12,7 @@ from .errors import (
     PublicKeyPointAtInfinityError,
     TinyECDHError,
 )
+from .kdf import DEFAULT_SHARED_KEY_LENGTH, constant_time_compare, derive_shared_key
 from .keys import (
     FIELD_BYTE_LENGTH,
     PRIVATE_KEY_BYTE_LENGTH,
@@ -23,6 +24,7 @@ from .keys import (
 )
 
 __all__ = [
+    "DEFAULT_SHARED_KEY_LENGTH",
     "FIELD_BYTE_LENGTH",
     "PRIVATE_KEY_BYTE_LENGTH",
     "PUBLIC_KEY_BYTE_LENGTH",
@@ -38,6 +40,8 @@ __all__ = [
     "SharedSecret",
     "TinyECDHError",
     "__version__",
+    "constant_time_compare",
+    "derive_shared_key",
     "ecdh_generate_keys",
     "ecdh_shared_secret",
     "validate_public_key_point",

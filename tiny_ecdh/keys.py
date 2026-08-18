@@ -12,6 +12,7 @@ from .errors import (
     PublicKeyNotOnCurveError,
     PublicKeyPointAtInfinityError,
 )
+from .kdf import DEFAULT_SHARED_KEY_LENGTH, derive_shared_key
 from .utils import CURVE, gf2point_is_zero, gf2point_mul, gf2point_on_curve
 
 __all__ = [
@@ -185,7 +186,26 @@ class PublicKey:
 
 @dataclass(frozen=True)
 class SharedSecret:
-    """The raw, unhashed curve point agreed on by both parties."""
+    """The x coordinate of the curve point agreed on by both parties.
 
-    x: int
-    y: int
+    ``raw_x`` is not a uniformly distributed key: a curve point's bits carry
+    the algebraic structure of the curve equation, and it must never be used
+    directly as symmetric key material. It is kept, under a name that makes
+    reading it a visible decision, only for teaching value and for
+    comparison against the original C implementation. The second coordinate
+    is a deterministic function of the first and is discarded entirely --
+    call ``derive_key`` for a key safe to actually use.
+    """
+
+    raw_x: int
+
+    def derive_key(
+        self, context: bytes, *, length: int = DEFAULT_SHARED_KEY_LENGTH
+    ) -> bytes:
+        """Derive a fixed-length key via HKDF-SHA256 over the x coordinate.
+
+        ``context`` binds the derivation to a purpose, so the same key pair
+        used for two purposes yields two different keys. Compare derived
+        keys with ``tiny_ecdh.constant_time_compare``, never with ``==``.
+        """
+        return derive_shared_key(self.raw_x, FIELD_BYTE_LENGTH, context, length=length)

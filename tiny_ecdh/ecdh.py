@@ -30,10 +30,14 @@ def ecdh_shared_secret(
     Validation runs to completion before the private scalar touches the
     peer's point at all, so a rejected key never leaks anything about the
     scalar through the point multiplication it would otherwise feed.
+
+    The returned :class:`SharedSecret` is not itself usable as key material
+    -- call ``.derive_key(context)`` on it to get a fixed-length, uniformly
+    distributed key.
     """
     x, y = peer_public_key.x, peer_public_key.y
     validate_public_key_point(x, y)
     secret_x, secret_y = gf2point_mul(x, y, private_key.scalar)
     if gf2point_is_zero(secret_x, secret_y):
         raise InvalidSharedSecretError("key agreement produced the point at infinity")
-    return SharedSecret(secret_x, secret_y)
+    return SharedSecret(secret_x)
