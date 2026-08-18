@@ -40,10 +40,6 @@ def bitvec_get_bit(x: int, idx: int) -> int:
     return (x >> idx) & 1
 
 
-def bitvec_degree(x: int) -> int:
-    return x.bit_length()
-
-
 def bitvec_is_zero(x: int) -> bool:
     return x == 0
 
@@ -57,21 +53,26 @@ def gf2field_inc(x: int) -> int:
 
 
 def gf2field_mul(x: int, y: int) -> int:
+    """Multiply reduced field elements; inputs must fit in ``CURVE.degree`` bits."""
+    if x.bit_length() > CURVE.degree or y.bit_length() > CURVE.degree:
+        raise ValueError("field element exceeds curve degree")
     result = 0
     while y:
         if y & 1:
             result ^= x
         y >>= 1
         x <<= 1
-        if x >> CURVE_DEGREE:
-            x ^= polynomial
+        if x >> CURVE.degree:
+            x ^= CURVE.polynomial
     return result
 
 
 def gf2field_inv(x: int) -> int:
+    if x.bit_length() > CURVE.degree:
+        raise ValueError("field element exceeds curve degree")
     if x == 0:
         raise ZeroDivisionError("cannot invert zero")
-    u, v = x, polynomial
+    u, v = x, CURVE.polynomial
     g1, g2 = 1, 0
     while u != 1:
         shift = u.bit_length() - v.bit_length()
@@ -126,6 +127,11 @@ def gf2point_add(x1: int, y1: int, x2: int, y2: int) -> tuple[int, int]:
 
 
 def gf2point_mul(x: int, y: int, exp: int) -> tuple[int, int]:
+    """Multiply a point; educational only, not suitable for production.
+
+    Execution time depends on secret bits and data-dependent inversion, so this
+    implementation must not be used for production cryptography.
+    """
     result = (0, 0)
     for bit in range(exp.bit_length() - 1, -1, -1):
         result = gf2point_double(*result)

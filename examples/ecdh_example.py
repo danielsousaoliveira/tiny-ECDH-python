@@ -7,8 +7,13 @@ from tiny_ecdh.utils import CURVE
 
 
 def main():
-    alice_private, alice_public = ecdh_generate_keys(secrets.randbelow(CURVE.order))
-    bob_private, bob_public = ecdh_generate_keys(secrets.randbelow(CURVE.order))
+    minimum = 2**80
+    alice_private, alice_public = ecdh_generate_keys(
+        minimum + secrets.randbelow(CURVE.order - minimum)
+    )
+    bob_private, bob_public = ecdh_generate_keys(
+        minimum + secrets.randbelow(CURVE.order - minimum)
+    )
     alice_secret = ecdh_shared_secret(alice_private, bob_public)
     bob_secret = ecdh_shared_secret(bob_private, alice_public)
     print("Equal Key" if alice_secret == bob_secret else "Error Key Not Equal")

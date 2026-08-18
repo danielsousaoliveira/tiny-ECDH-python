@@ -20,11 +20,21 @@ def test_field_vectors():
 
 
 def test_point_vectors_and_group_order():
-    g = (utils.base_x, utils.base_y)
-    two_g = utils.gf2point_mul(*g, 2)
-    three_g = utils.gf2point_mul(*g, 3)
+    g = (
+        0x00000003F0EBA16286A2D57EA0991168D4994637E8343E36,
+        0x00000000D51FBC6C71A0094FA2CDD545B11C5C0C797324F1,
+    )
+    two_g = (
+        0x00000001AEB33FED9C49E0200A0C561EA66D5AB85BD4C2D4,
+        0x0000000530608192CD47D0C24C20076475FD625CC82895E8,
+    )
+    three_g = (
+        0x0000000634000577F86AA315009D6F9B906691F6EDD691FE,
+        0x0000000401A3DE0D6C2EC014E6FBA5653587BD45DC2230BE,
+    )
+    order = 0x040000000000000000000292FE77E70C12A4234C33
     assert utils.gf2point_on_curve(*g)
     assert utils.gf2point_add(0, 0, *g) == g
     assert utils.gf2point_double(*g) == two_g
     assert utils.gf2point_add(*g, *two_g) == three_g
-    assert utils.gf2point_mul(*g, utils.base_order) == (0, 0)
+    assert utils.gf2point_mul(*g, order) == (0, 0)
