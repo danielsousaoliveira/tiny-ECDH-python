@@ -6,7 +6,18 @@ from tiny_ecdh import (
     ecdh_generate_keys,
     ecdh_shared_secret,
 )
-from tiny_ecdh.kdf import derive_shared_key
+from tiny_ecdh.kdf import _hkdf_expand, _hkdf_extract, derive_shared_key
+
+#: RFC 5869 Appendix A.1, Test Case 1 (HKDF-SHA256), taken from the RFC --
+#: not derived from this implementation's own output.
+_RFC5869_IKM = bytes.fromhex("0b" * 22)
+_RFC5869_SALT = bytes.fromhex("000102030405060708090a0b0c")
+_RFC5869_INFO = bytes.fromhex("f0f1f2f3f4f5f6f7f8f9")
+_RFC5869_LENGTH = 42
+_RFC5869_OKM = bytes.fromhex(
+    "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5b"
+    "f34007208d5b887185865"
+)
 
 
 def test_both_parties_derive_the_same_fixed_length_key():
@@ -50,9 +61,27 @@ def test_derive_shared_key_rejects_non_positive_length():
         derive_shared_key(1, 21, b"ctx", length=0)
 
 
+def test_derive_shared_key_rejects_length_above_hkdf_maximum():
+    max_length = 255 * 32
+    derive_shared_key(1, 21, b"ctx", length=max_length)
+    with pytest.raises(ValueError):
+        derive_shared_key(1, 21, b"ctx", length=max_length + 1)
+
+
 def test_derive_shared_key_rejects_non_bytes_context():
     with pytest.raises(TypeError):
         derive_shared_key(1, 21, "not-bytes")  # type: ignore[arg-type]
+
+
+def test_derive_shared_key_rejects_non_int_length():
+    with pytest.raises(TypeError):
+        derive_shared_key(1, 21, b"ctx", length="32")  # type: ignore[arg-type]
+
+
+def test_hkdf_matches_rfc5869_test_case_1():
+    pseudorandom_key = _hkdf_extract(_RFC5869_SALT, _RFC5869_IKM)
+    output_key_material = _hkdf_expand(pseudorandom_key, _RFC5869_INFO, _RFC5869_LENGTH)
+    assert output_key_material == _RFC5869_OKM
 
 
 def test_constant_time_compare_matches_and_mismatches():

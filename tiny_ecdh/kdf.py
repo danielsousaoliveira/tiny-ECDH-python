@@ -8,6 +8,8 @@ fixed-length, uniformly distributed key, bound to a caller-supplied context
 so the same key pair yields independent keys for independent purposes.
 """
 
+from __future__ import annotations
+
 import hashlib
 import hmac
 
@@ -17,6 +19,9 @@ __all__ = ["DEFAULT_SHARED_KEY_LENGTH", "constant_time_compare", "derive_shared_
 DEFAULT_SHARED_KEY_LENGTH = 32
 
 _HASH_LENGTH = hashlib.sha256().digest_size
+
+#: RFC 5869 caps HKDF-Expand output at 255 times the underlying hash length.
+_MAX_SHARED_KEY_LENGTH = 255 * _HASH_LENGTH
 
 
 def _hkdf_extract(salt: bytes, input_key_material: bytes) -> bytes:
@@ -52,14 +57,21 @@ def derive_shared_key(
     """
     if not isinstance(context, (bytes, bytearray)):
         raise TypeError(f"context must be bytes, got {type(context).__name__}")
+    if not isinstance(length, int) or isinstance(length, bool):
+        raise TypeError(f"length must be an int, got {type(length).__name__}")
     if length <= 0:
         raise ValueError("length must be a positive number of bytes")
+    if length > _MAX_SHARED_KEY_LENGTH:
+        raise ValueError(
+            f"length must be at most {_MAX_SHARED_KEY_LENGTH} bytes "
+            f"(255 * {_HASH_LENGTH}-byte hash), got {length}"
+        )
     input_key_material = x.to_bytes(x_byte_length, "big")
     pseudorandom_key = _hkdf_extract(b"\x00" * _HASH_LENGTH, input_key_material)
     return _hkdf_expand(pseudorandom_key, bytes(context), length)
 
 
-def constant_time_compare(a: bytes, b: bytes) -> bool:
+def constant_time_compare(a: bytes | bytearray, b: bytes | bytearray) -> bool:
     """Compare two byte strings without leaking their contents through timing.
 
     Use this for every comparison of a derived key or shared secret; ``==``
