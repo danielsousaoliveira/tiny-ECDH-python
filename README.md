@@ -13,8 +13,12 @@ It's a small and portable implementation of the [Elliptic-Curve Diffie-Hellman k
 
 Description from Wikipedia:
 
-> Elliptic-curve Diffie–Hellman (ECDH) is an anonymous key agreement protocol that allows two parties, each having an elliptic-curve public–private key pair, to establish a shared secret over an insecure channel. This shared secret may be directly used as a key, or to derive another key. The key, or the derived key, can then be used to encrypt subsequent communications using a symmetric-key cipher. It is a variant of the Diffie–Hellman protocol using elliptic-curve cryptography.
-`
+> Elliptic-curve Diffie–Hellman (ECDH) is an anonymous key agreement protocol that allows two parties, each having an elliptic-curve public–private key pair, to establish a shared secret over an insecure channel. It is a variant of the Diffie–Hellman protocol using elliptic-curve cryptography.
+
+The raw curve point that comes out of the exchange is **not** a key: its bits carry the
+algebraic structure of the curve equation, not uniform randomness. Never use it directly to
+encrypt anything -- always derive a key from it first, as shown below.
+
 This repository was developed just by replicating the C version in Python, and can be improved to a more pythonic alternative. It's still very slow when compared to the C version.
 
 Usage:
@@ -33,22 +37,37 @@ bobPrivKey, bobPubKey = ecdh_generate_keys()
 ```
 3. Alice and Bob exchange their public keys through the insecure channel (e.g. over Bluetooth)
 
-4. Alice calculates sharedKey = bobPubKey * alicePrivKey
+4. Alice calculates the shared point and derives a key from it, bound to a context that names
+   what the key is for:
 ```Python
+from tiny_ecdh import constant_time_compare
+
+context = b"my-app: session key v1"
+
 # raises InvalidPublicKeyError if bobPubKey fails validation
-aliceSharedKey = ecdh_shared_secret(alicePrivKey, bobPubKey)
+aliceSharedPoint = ecdh_shared_secret(alicePrivKey, bobPubKey)
+aliceKey = aliceSharedPoint.derive_key(context)
 ```
 
-5. Bob calculates sharedKey = alicePubKey * bobPrivKey
+5. Bob does the same with the same context:
 ```Python
-bobSharedKey = ecdh_shared_secret(bobPrivKey, alicePubKey)
+bobSharedPoint = ecdh_shared_secret(bobPrivKey, alicePubKey)
+bobKey = bobSharedPoint.derive_key(context)
 ```
 
-6. Now both Alice and Bob have the same sharedKey == bobPubKey * alicePrivKey == alicePubKey * bobPrivKey
+6. Now both Alice and Bob have the same fixed-length, uniformly distributed key, safe to use
+   directly with a symmetric cipher. Compare derived keys in constant time, never with `==`:
 
 ```Python
-assert aliceSharedKey == bobSharedKey
+assert constant_time_compare(aliceKey, bobKey)
 ```
+
+A different `context` value on the same key pair produces a completely different key, so the
+same pair can be reused safely across independent purposes without those purposes sharing key
+material. `aliceSharedPoint.raw_x` is the undifferentiated x-coordinate of the shared point; it
+is kept only for teaching value and comparison against the original C implementation, and is
+deliberately named so that reading it instead of calling `derive_key` is a visible decision, not
+the normal path.
 
 ### Timing limitations
 
