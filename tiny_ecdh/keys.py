@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .errors import InvalidPrivateKeyError, InvalidPublicKeyError
+from .errors import (
+    InvalidPrivateKeyError,
+    InvalidPublicKeyError,
+    PublicKeyCoordinateRangeError,
+    PublicKeyNotInSubgroupError,
+    PublicKeyNotOnCurveError,
+    PublicKeyPointAtInfinityError,
+)
 from .utils import CURVE, gf2point_is_zero, gf2point_mul, gf2point_on_curve
 
 __all__ = [
@@ -14,6 +21,7 @@ __all__ = [
     "PrivateKey",
     "PublicKey",
     "SharedSecret",
+    "validate_public_key_point",
 ]
 
 #: Width in bytes of a single field element (ceil(CURVE.degree / 8)).
@@ -88,9 +96,35 @@ class PrivateKey:
 
 def _validate_field_element(name: str, value: int) -> None:
     if not isinstance(value, int) or isinstance(value, bool):
-        raise InvalidPublicKeyError(f"public key {name} must be an int")
+        raise PublicKeyCoordinateRangeError(f"public key {name} must be an int")
     if not (0 <= value < 2**CURVE.degree):
-        raise InvalidPublicKeyError(f"public key {name} is out of range")
+        raise PublicKeyCoordinateRangeError(f"public key {name} is out of range")
+
+
+def validate_public_key_point(x: int, y: int) -> None:
+    """Validate a peer's public key point before it ever meets a secret scalar.
+
+    Checks, in order, that ``x`` and ``y`` are in-range field elements, that
+    the point is not the point at infinity, that it lies on the curve, and
+    that it is a member of the curve's large prime-order subgroup. The
+    infinity check must precede the on-curve check: the curve equation is
+    satisfied by the point at infinity, so testing on-curve first would let
+    infinity through as if it were a valid point.
+
+    This does not, and cannot, verify that the point belongs to whoever
+    claims it: this is unauthenticated key agreement, and validating a
+    point's curve membership says nothing about the identity of its sender.
+    """
+    _validate_field_element("x", x)
+    _validate_field_element("y", y)
+    if gf2point_is_zero(x, y):
+        raise PublicKeyPointAtInfinityError("public key is the point at infinity")
+    if not gf2point_on_curve(x, y):
+        raise PublicKeyNotOnCurveError("public key point is not on the curve")
+    if not gf2point_is_zero(*gf2point_mul(x, y, CURVE.order)):
+        raise PublicKeyNotInSubgroupError(
+            "public key point is not a member of the curve's prime-order subgroup"
+        )
 
 
 @dataclass(frozen=True)
@@ -101,16 +135,7 @@ class PublicKey:
     y: int
 
     def __post_init__(self) -> None:
-        _validate_field_element("x", self.x)
-        _validate_field_element("y", self.y)
-        if (
-            gf2point_is_zero(self.x, self.y)
-            or not gf2point_on_curve(self.x, self.y)
-            or not gf2point_is_zero(*gf2point_mul(self.x, self.y, CURVE.order))
-        ):
-            raise InvalidPublicKeyError(
-                "public key point is not a valid member of the curve's subgroup"
-            )
+        validate_public_key_point(self.x, self.y)
 
     def to_bytes(self) -> bytes:
         """Encode in SEC1 uncompressed form: ``0x04 || x || y``, fixed width."""
