@@ -11,7 +11,6 @@ import numpy as np
 
 from tiny_ecdh import utils
 
-
 SOURCE = "SEC 2 v2, sections 2.2.1 and 3.2.3; cross-checked against kokke/tiny-ECDH-c"
 
 
@@ -25,12 +24,12 @@ def point(value):
 
 G = (utils.base_x, utils.base_y)
 TWO_G = (
-    [0xD4C2D45B, 0xB85A6DA6, 0x1E560C0A, 0x20E0499C, 0xED3FB3AE, 0x01],
-    [0xE89528C8, 0x5C62FD75, 0x6407204C, 0xD2D047CD, 0x92816030, 0x50],
+    [1540670164, 2792184504, 168580638, 2622087200, 2930982893, 1],
+    [3358103016, 1979540060, 1277167460, 3444035778, 811630994, 5],
 )
 THREE_G = (
-    [0xFE91D6ED, 0xF6916690, 0x9B6F9D00, 0x15A36AF8, 0x77050034, 0x06],
-    [0xBE3022DC, 0x45BD8735, 0x65A5FBE6, 0x14C02E6C, 0x0DDEA301, 0x04],
+    [3990262270, 2422641142, 10317723, 4167738133, 872416631, 6],
+    [3693228222, 898088261, 3875251557, 1815003156, 27516429, 4],
 )
 
 
@@ -49,9 +48,10 @@ def test_field_inversion_vector():
 
 def test_generator_is_on_curve_and_identity_addition_is_neutral():
     gx, gy = point(G)
-    zero = words([0] * 6)
+    zero_x = words([0] * 6)
+    zero_y = words([0] * 6)
     assert utils.gf2point_on_curve(gx, gy)
-    result = utils.gf2point_add(zero, zero, gx, gy)
+    result = utils.gf2point_add(zero_x, zero_y, gx, gy)
     assert np.array_equal(result[0], gx)
     assert np.array_equal(result[1], gy)
 
