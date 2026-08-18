@@ -1,5 +1,4 @@
-from tiny_ecdh import ecdh_generate_keys, ecdh_shared_secret
-from tiny_ecdh import utils
+from tiny_ecdh import ecdh_generate_keys, ecdh_shared_secret, utils
 
 
 def test_key_exchange_and_immutable_inputs():

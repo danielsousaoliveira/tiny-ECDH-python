@@ -1,6 +1,6 @@
 """Educational ECDH entry points for the NIST B-163 curve."""
 
-from .utils import CURVE, gf2point_mul, gf2point_on_curve, gf2point_is_zero
+from .utils import CURVE, gf2point_is_zero, gf2point_mul, gf2point_on_curve
 
 __all__ = ["ecdh_generate_keys", "ecdh_shared_secret"]
 

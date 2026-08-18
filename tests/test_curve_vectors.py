@@ -2,12 +2,20 @@ from tiny_ecdh import utils
 
 
 def test_field_vectors():
-    left = int("00000001456789ab bcdef123 3456789a abcdef12 23456789".replace(" ", ""), 16)
-    right = int("0000000787654321 0fedcba9 87654321 0fedcba9 87654321".replace(" ", ""), 16)
-    expected = int("000000036bf43db1 89eb5411 49c6feff c2584634 623808f0".replace(" ", ""), 16)
+    left = int(
+        "00000001456789ab bcdef123 3456789a abcdef12 23456789".replace(" ", ""), 16
+    )
+    right = int(
+        "0000000787654321 0fedcba9 87654321 0fedcba9 87654321".replace(" ", ""), 16
+    )
+    expected = int(
+        "000000036bf43db1 89eb5411 49c6feff c2584634 623808f0".replace(" ", ""), 16
+    )
     assert utils.gf2field_mul(left, right) == expected
     value = left
-    inverse = int("0000000373d5e900 b852eb09 ba8221c4 a5e48c24 ad88ec61".replace(" ", ""), 16)
+    inverse = int(
+        "0000000373d5e900 b852eb09 ba8221c4 a5e48c24 ad88ec61".replace(" ", ""), 16
+    )
     assert utils.gf2field_inv(value) == inverse
 
 

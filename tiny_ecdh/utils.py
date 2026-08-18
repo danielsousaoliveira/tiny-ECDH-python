@@ -101,7 +101,9 @@ def gf2point_double(x: int, y: int) -> tuple[int, int]:
         return 0, 0
     slope = gf2field_add(gf2field_mul(y, gf2field_inv(x)), x)
     new_x = gf2field_add(gf2field_add(gf2field_mul(slope, slope), slope), CURVE.a)
-    new_y = gf2field_add(gf2field_mul(x, x), gf2field_mul(gf2field_add(slope, 1), new_x))
+    new_y = gf2field_add(
+        gf2field_mul(x, x), gf2field_mul(gf2field_add(slope, 1), new_x)
+    )
     return new_x, new_y
 
 
@@ -113,8 +115,13 @@ def gf2point_add(x1: int, y1: int, x2: int, y2: int) -> tuple[int, int]:
     if x1 == x2:
         return gf2point_double(x1, y1) if y1 == y2 else (0, 0)
     slope = gf2field_mul(gf2field_add(y1, y2), gf2field_inv(gf2field_add(x1, x2)))
-    new_x = gf2field_add(gf2field_add(gf2field_mul(slope, slope), slope), gf2field_add(x1, gf2field_add(x2, CURVE.a)))
-    new_y = gf2field_add(gf2field_mul(slope, gf2field_add(x1, new_x)), gf2field_add(new_x, y1))
+    new_x = gf2field_add(
+        gf2field_add(gf2field_mul(slope, slope), slope),
+        gf2field_add(x1, gf2field_add(x2, CURVE.a)),
+    )
+    new_y = gf2field_add(
+        gf2field_mul(slope, gf2field_add(x1, new_x)), gf2field_add(new_x, y1)
+    )
     return new_x, new_y
 
 
@@ -131,5 +138,11 @@ def gf2point_on_curve(x: int, y: int) -> bool:
     if gf2point_is_zero(x, y):
         return True
     left = gf2field_add(gf2field_mul(y, y), gf2field_mul(x, y))
-    right = gf2field_add(gf2field_add(gf2field_mul(gf2field_mul(x, x), x), gf2field_mul(CURVE.a, gf2field_mul(x, x))), CURVE.b)
+    right = gf2field_add(
+        gf2field_add(
+            gf2field_mul(gf2field_mul(x, x), x),
+            gf2field_mul(CURVE.a, gf2field_mul(x, x)),
+        ),
+        CURVE.b,
+    )
     return left == right
