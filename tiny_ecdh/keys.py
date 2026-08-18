@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import InvalidPrivateKeyError, InvalidPublicKeyError
-from .utils import CURVE
+from .utils import CURVE, gf2point_is_zero, gf2point_mul, gf2point_on_curve
 
 __all__ = [
     "FIELD_BYTE_LENGTH",
@@ -103,6 +103,14 @@ class PublicKey:
     def __post_init__(self) -> None:
         _validate_field_element("x", self.x)
         _validate_field_element("y", self.y)
+        if (
+            gf2point_is_zero(self.x, self.y)
+            or not gf2point_on_curve(self.x, self.y)
+            or not gf2point_is_zero(*gf2point_mul(self.x, self.y, CURVE.order))
+        ):
+            raise InvalidPublicKeyError(
+                "public key point is not a valid member of the curve's subgroup"
+            )
 
     def to_bytes(self) -> bytes:
         """Encode in SEC1 uncompressed form: ``0x04 || x || y``, fixed width."""

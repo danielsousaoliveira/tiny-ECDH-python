@@ -86,6 +86,13 @@ def test_public_key_from_bytes_rejects_coordinate_outside_field():
         PublicKey.from_bytes(b"\x04" + oversized_x)
 
 
+def test_public_key_from_bytes_rejects_in_range_off_curve_point():
+    off_curve_x = (G_X + 1).to_bytes(FIELD_BYTE_LENGTH, "big")
+    off_curve_y = G_Y.to_bytes(FIELD_BYTE_LENGTH, "big")
+    with pytest.raises(InvalidPublicKeyError):
+        PublicKey.from_bytes(b"\x04" + off_curve_x + off_curve_y)
+
+
 def test_private_key_from_bytes_rejects_wrong_type():
     with pytest.raises(InvalidPrivateKeyError):
         PrivateKey.from_bytes("a" * PRIVATE_KEY_BYTE_LENGTH)
