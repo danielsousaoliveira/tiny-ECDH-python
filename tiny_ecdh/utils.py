@@ -86,7 +86,7 @@ def gf2field_inv(x: int) -> int:
 
 
 def gf2point_is_zero(x: int, y: int) -> bool:
-    return x == 0 and y == 0
+    return bool((x == 0) & (y == 0))
 
 
 def gf2point_set_zero() -> tuple[int, int]:
@@ -126,17 +126,36 @@ def gf2point_add(x1: int, y1: int, x2: int, y2: int) -> tuple[int, int]:
     return new_x, new_y
 
 
+def _select_int(bit: int, on_true: int, on_false: int) -> int:
+    """Return ``on_true`` if ``bit`` is 1 else ``on_false``, without branching on ``bit``."""
+    mask = -bit
+    return (on_true & mask) | (on_false & ~mask)
+
+
+def _select_point(
+    bit: int, on_true: tuple[int, int], on_false: tuple[int, int]
+) -> tuple[int, int]:
+    return (
+        _select_int(bit, on_true[0], on_false[0]),
+        _select_int(bit, on_true[1], on_false[1]),
+    )
+
+
 def gf2point_mul(x: int, y: int, exp: int) -> tuple[int, int]:
     """Multiply a point; educational only, not suitable for production.
 
-    Execution time depends on secret bits and data-dependent inversion, so this
-    implementation must not be used for production cryptography.
+    Always runs ``CURVE.degree`` double-and-add-always iterations, so the
+    iteration count and the sequence of operations do not depend on ``exp``.
+    This does not make the implementation constant-time: field inversion
+    (called from every double and add) is variable-time extended-Euclid, and
+    the interpreter's own arbitrary-precision arithmetic takes time that
+    varies with operand size. Those leaks are out of scope for this function.
     """
-    result = (0, 0)
-    for bit in range(exp.bit_length() - 1, -1, -1):
+    result = gf2point_set_zero()
+    for bit_index in range(CURVE.degree - 1, -1, -1):
         result = gf2point_double(*result)
-        if exp & (1 << bit):
-            result = gf2point_add(*result, x, y)
+        added = gf2point_add(*result, x, y)
+        result = _select_point(bitvec_get_bit(exp, bit_index), added, result)
     return result
 
 

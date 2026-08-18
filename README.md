@@ -50,6 +50,22 @@ bobSharedKey = ecdh_shared_secret(bobPrivKey, alicePubKey)
 assert aliceSharedKey == bobSharedKey
 ```
 
+### Timing limitations
+
+Scalar multiplication always runs the same fixed number of double-and-add-always
+iterations and never branches on a bit of the secret scalar, so it no longer
+leaks the scalar's bit length or Hamming weight through the iteration count.
+This is not the same as constant-time, and the package must not be described
+that way:
+
+- Field inversion (`gf2field_inv`) is still variable-time extended-Euclid; its
+  running time depends on the field element being inverted, and it is called
+  from every point doubling and addition. Fixing this is tracked separately.
+- Python's arbitrary-precision integers do not execute in fixed time for a
+  fixed bit width — operations on operands of different magnitude take
+  different amounts of interpreter time regardless of how the algorithm above
+  is shaped. This cannot be closed from pure Python.
+
 ### TODO:
 
 - Add more NIST curves
