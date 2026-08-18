@@ -7,8 +7,6 @@ from .utils import CURVE
 
 __all__ = ["PrivateKey", "PublicKey", "SharedSecret"]
 
-_MIN_SCALAR = 2**80
-
 
 @dataclass(frozen=True)
 class PrivateKey:
@@ -19,9 +17,9 @@ class PrivateKey:
     def __post_init__(self) -> None:
         if not isinstance(self.scalar, int) or isinstance(self.scalar, bool):
             raise InvalidPrivateKeyError("private key scalar must be an int")
-        if not (_MIN_SCALAR <= self.scalar < CURVE.order):
+        if not (1 <= self.scalar < CURVE.order):
             raise InvalidPrivateKeyError(
-                f"private key must satisfy 2**80 <= scalar < {CURVE.order}"
+                f"private key must satisfy 1 <= scalar < {CURVE.order}"
             )
 
     def __repr__(self) -> str:
