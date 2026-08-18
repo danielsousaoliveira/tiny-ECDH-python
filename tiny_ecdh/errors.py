@@ -3,6 +3,11 @@
 __all__ = [
     "InvalidPrivateKeyError",
     "InvalidPublicKeyError",
+    "InvalidSharedSecretError",
+    "PublicKeyCoordinateRangeError",
+    "PublicKeyNotInSubgroupError",
+    "PublicKeyNotOnCurveError",
+    "PublicKeyPointAtInfinityError",
     "TinyECDHError",
 ]
 
@@ -16,4 +21,24 @@ class InvalidPrivateKeyError(TinyECDHError):
 
 
 class InvalidPublicKeyError(TinyECDHError):
-    """A peer's public key failed on-curve or subgroup validation."""
+    """A peer's public key failed validation."""
+
+
+class PublicKeyCoordinateRangeError(InvalidPublicKeyError):
+    """A public key coordinate is not an element of the curve's field."""
+
+
+class PublicKeyPointAtInfinityError(InvalidPublicKeyError):
+    """A public key is the point at infinity."""
+
+
+class PublicKeyNotOnCurveError(InvalidPublicKeyError):
+    """A public key does not satisfy the curve equation."""
+
+
+class PublicKeyNotInSubgroupError(InvalidPublicKeyError):
+    """A public key is not a member of the curve's large prime-order subgroup."""
+
+
+class InvalidSharedSecretError(TinyECDHError):
+    """The key agreement produced the point at infinity as a shared secret."""

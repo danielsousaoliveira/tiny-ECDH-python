@@ -2,7 +2,16 @@
 
 from ._version import __version__
 from .ecdh import ecdh_generate_keys, ecdh_shared_secret
-from .errors import InvalidPrivateKeyError, InvalidPublicKeyError, TinyECDHError
+from .errors import (
+    InvalidPrivateKeyError,
+    InvalidPublicKeyError,
+    InvalidSharedSecretError,
+    PublicKeyCoordinateRangeError,
+    PublicKeyNotInSubgroupError,
+    PublicKeyNotOnCurveError,
+    PublicKeyPointAtInfinityError,
+    TinyECDHError,
+)
 from .keys import (
     FIELD_BYTE_LENGTH,
     PRIVATE_KEY_BYTE_LENGTH,
@@ -10,6 +19,7 @@ from .keys import (
     PrivateKey,
     PublicKey,
     SharedSecret,
+    validate_public_key_point,
 )
 
 __all__ = [
@@ -18,11 +28,17 @@ __all__ = [
     "PUBLIC_KEY_BYTE_LENGTH",
     "InvalidPrivateKeyError",
     "InvalidPublicKeyError",
+    "InvalidSharedSecretError",
     "PrivateKey",
     "PublicKey",
+    "PublicKeyCoordinateRangeError",
+    "PublicKeyNotInSubgroupError",
+    "PublicKeyNotOnCurveError",
+    "PublicKeyPointAtInfinityError",
     "SharedSecret",
     "TinyECDHError",
     "__version__",
     "ecdh_generate_keys",
     "ecdh_shared_secret",
+    "validate_public_key_point",
 ]
