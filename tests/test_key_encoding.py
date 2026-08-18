@@ -84,3 +84,31 @@ def test_public_key_from_bytes_rejects_coordinate_outside_field():
     oversized_x = (b"\xff" * FIELD_BYTE_LENGTH) + good[1 + FIELD_BYTE_LENGTH :]
     with pytest.raises(InvalidPublicKeyError):
         PublicKey.from_bytes(b"\x04" + oversized_x)
+
+
+def test_private_key_from_bytes_rejects_wrong_type():
+    with pytest.raises(InvalidPrivateKeyError):
+        PrivateKey.from_bytes("a" * PRIVATE_KEY_BYTE_LENGTH)
+    with pytest.raises(InvalidPrivateKeyError):
+        PrivateKey.from_bytes(None)
+
+
+def test_private_key_from_hex_rejects_wrong_type():
+    with pytest.raises(InvalidPrivateKeyError):
+        PrivateKey.from_hex(None)
+    with pytest.raises(InvalidPrivateKeyError):
+        PrivateKey.from_hex(b"00" * PRIVATE_KEY_BYTE_LENGTH)
+
+
+def test_public_key_from_bytes_rejects_wrong_type():
+    with pytest.raises(InvalidPublicKeyError):
+        PublicKey.from_bytes("a" * PUBLIC_KEY_BYTE_LENGTH)
+    with pytest.raises(InvalidPublicKeyError):
+        PublicKey.from_bytes(None)
+
+
+def test_public_key_from_hex_rejects_wrong_type():
+    with pytest.raises(InvalidPublicKeyError):
+        PublicKey.from_hex(None)
+    with pytest.raises(InvalidPublicKeyError):
+        PublicKey.from_hex(b"04" * PUBLIC_KEY_BYTE_LENGTH)

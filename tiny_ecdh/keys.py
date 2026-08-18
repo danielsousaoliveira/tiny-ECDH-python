@@ -60,6 +60,10 @@ class PrivateKey:
     @classmethod
     def from_bytes(cls, data: bytes) -> PrivateKey:
         """Parse fixed-width big-endian bytes, raising on any malformed input."""
+        if not isinstance(data, (bytes, bytearray)):
+            raise InvalidPrivateKeyError(
+                f"private key must be bytes, got {type(data).__name__}"
+            )
         if len(data) != PRIVATE_KEY_BYTE_LENGTH:
             raise InvalidPrivateKeyError(
                 f"private key must be {PRIVATE_KEY_BYTE_LENGTH} bytes, got {len(data)}"
@@ -69,6 +73,10 @@ class PrivateKey:
     @classmethod
     def from_hex(cls, text: str) -> PrivateKey:
         """Parse a hex string, raising on malformed hex or wrong length."""
+        if not isinstance(text, str):
+            raise InvalidPrivateKeyError(
+                f"private key hex must be a string, got {type(text).__name__}"
+            )
         try:
             data = bytes.fromhex(text)
         except ValueError as exc:
@@ -111,6 +119,10 @@ class PublicKey:
     @classmethod
     def from_bytes(cls, data: bytes) -> PublicKey:
         """Parse SEC1 uncompressed bytes, raising on any malformed input."""
+        if not isinstance(data, (bytes, bytearray)):
+            raise InvalidPublicKeyError(
+                f"public key must be bytes, got {type(data).__name__}"
+            )
         if len(data) != PUBLIC_KEY_BYTE_LENGTH:
             raise InvalidPublicKeyError(
                 f"public key must be {PUBLIC_KEY_BYTE_LENGTH} bytes, got {len(data)}"
@@ -127,6 +139,10 @@ class PublicKey:
     @classmethod
     def from_hex(cls, text: str) -> PublicKey:
         """Parse a hex string, raising on malformed hex or wrong length."""
+        if not isinstance(text, str):
+            raise InvalidPublicKeyError(
+                f"public key hex must be a string, got {type(text).__name__}"
+            )
         try:
             data = bytes.fromhex(text)
         except ValueError as exc:
