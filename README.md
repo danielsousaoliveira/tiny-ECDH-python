@@ -23,25 +23,23 @@ The [ECDH algorithm](https://cryptobook.nakov.com/asymmetric-key-ciphers/ecdh-ke
 
 1. Alice generates a random ECC key pair: {alicePrivKey, alicePubKey = alicePrivKey * G}
 ```Python
-# Assumes private key is filled with random data before calling, and generates public key
-alicePrivKey, alicePubKey = ecdh_generate_keys(alicePrivKey, alicePubKey)
+# scalar must satisfy 2**80 <= scalar < curve order; returns typed PrivateKey/PublicKey objects
+alicePrivKey, alicePubKey = ecdh_generate_keys(aliceScalar)
 ```
 2. Bob generates a random ECC key pair: {bobPrivKey, bobPubKey = bobPrivKey * G}
 ```Python
-# Assumes private key is filled with random data before calling, and generates public key
-bobPrivKey, bobPubKey = ecdh_generate_keys(bobPrivKey, bobPubKey)
+bobPrivKey, bobPubKey = ecdh_generate_keys(bobScalar)
 ```
 3. Alice and Bob exchange their public keys through the insecure channel (e.g. over Bluetooth)
 
 4. Alice calculates sharedKey = bobPubKey * alicePrivKey
 ```Python
-# own private key + Bob's public key will generate a shared secret key
+# raises InvalidPublicKeyError if bobPubKey fails validation
 aliceSharedKey = ecdh_shared_secret(alicePrivKey, bobPubKey)
 ```
 
 5. Bob calculates sharedKey = alicePubKey * bobPrivKey
 ```Python
-# own private key + Alice's public key will generate a shared secret key
 bobSharedKey = ecdh_shared_secret(bobPrivKey, alicePubKey)
 ```
 

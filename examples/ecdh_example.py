@@ -16,7 +16,7 @@ def main():
     )
     alice_secret = ecdh_shared_secret(alice_private, bob_public)
     bob_secret = ecdh_shared_secret(bob_private, alice_public)
-    print("Equal Key" if alice_secret == bob_secret else "Error Key Not Equal")
+    print("Equal Key" if alice_secret == bob_secret else "Error: Key Not Equal")
 
 
 if __name__ == "__main__":
