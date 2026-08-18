@@ -53,21 +53,28 @@ assert aliceSharedKey == bobSharedKey
 ### Timing limitations
 
 Scalar multiplication always runs the same fixed number of double-and-add-always
-iterations, and each iteration always performs the same field operations in the
-same order regardless of the scalar: point doubling and addition are built from
+iterations, and each iteration always performs the same sequence of point
+operations regardless of the scalar: point doubling and addition are built from
 branch-free variants that always compute every case (identity operand, the
 doubling case, points summing to the identity, the general case) and select the
 right result arithmetically, instead of branching to a cheaper or more expensive
-path. So the implementation no longer leaks the scalar's bit length, Hamming
-weight, or the position of any coincidence between the running total and the
-point being added. This is not the same as constant-time, and the package must
-not be described that way:
+path. So the implementation no longer leaks the scalar's bit length through the
+iteration count, or the position of any coincidence between the running total
+and the point being added through which top-level case is taken. This is a
+fixed *schedule of point operations*, not constant-time execution, and the
+package must not be described that way — several of those point operations are
+themselves still data-dependent underneath:
 
 - Field inversion (`gf2field_inv`) is still variable-time extended-Euclid; its
-  running time depends on the field element being inverted, and it is called
-  from every point doubling and addition — twice per iteration, always, but
-  each call's own running time still varies with its input. Fixing this is
-  tracked separately.
+  running time depends on the field element being inverted, and it runs three
+  times per iteration, always, but each call's own running time still varies
+  with its input. Fixing this is tracked separately.
+- Field multiplication (`gf2field_mul`) loops once per bit of one operand and
+  branches on each bit (`while y: ... if y & 1`), so both its iteration count
+  and which branch it takes on a given iteration depend on the operand's bit
+  pattern — which, inside the ladder, is derived from the secret scalar. This
+  is the same class of leak as field inversion and is not fixed by the
+  branch-free point operations above.
 - Python's arbitrary-precision integers do not execute in fixed time for a
   fixed bit width — operations on operands of different magnitude take
   different amounts of interpreter time regardless of how the algorithm above

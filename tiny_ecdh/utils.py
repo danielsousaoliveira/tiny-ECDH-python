@@ -221,13 +221,19 @@ def gf2point_mul(x: int, y: int, exp: int) -> tuple[int, int]:
     which precomputed candidate a branch-free select picks, never how much
     work is done or which functions are called.
 
-    This does not make the implementation constant-time. Field inversion
-    (called once per ``_unified_double`` and once per ``_unified_add``, so
-    twice per iteration here) is variable-time extended-Euclid, and the
-    interpreter's own arbitrary-precision arithmetic takes time that varies
-    with operand size. Both are data-dependent regardless of how this
-    function is shaped, and closing them is out of scope for this function.
+    This does not make the implementation constant-time. Field inversion is
+    variable-time extended-Euclid and runs three times per iteration here
+    (once in the loop's own ``_unified_double`` call, and twice more inside
+    ``_unified_add``, which computes its own doubled candidate as well as
+    the general-case slope). Field multiplication (``gf2field_mul``) loops
+    once per bit of one operand and branches on each bit, so its own running
+    time depends on that operand's value too. The interpreter's own
+    arbitrary-precision arithmetic also takes time that varies with operand
+    size. All of this is data-dependent regardless of how this function is
+    shaped, and closing it is out of scope for this function.
     """
+    if exp < 0 or exp.bit_length() > CURVE.degree:
+        raise ValueError(f"exp must satisfy 0 <= exp < 2**{CURVE.degree}")
     return _double_and_add_always(x, y, exp, CURVE.degree)
 
 

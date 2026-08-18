@@ -43,6 +43,7 @@ def test_field_inversion_call_count_is_fixed_regardless_of_scalar():
     point operations must make this constant too."""
     counts = [_call_counts(scalar)[0] for scalar in SCALARS]
     assert len(set(counts)) == 1
+    assert counts[0] == 3 * utils.CURVE.degree
 
 
 def test_gf2point_add_is_never_called_by_gf2point_mul():
