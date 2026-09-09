@@ -23,6 +23,11 @@ _HASH_LENGTH = hashlib.sha256().digest_size
 #: RFC 5869 caps HKDF-Expand output at 255 times the underlying hash length.
 _MAX_SHARED_KEY_LENGTH = 255 * _HASH_LENGTH
 
+#: No curve this package supports needs a field element wider than this many
+#: bytes; caps ``x_byte_length`` so a caller can't make ``derive_shared_key``
+#: allocate an arbitrarily large integer before rejecting a bad ``x``.
+_MAX_X_BYTE_LENGTH = 4096
+
 
 def _hkdf_extract(salt: bytes, input_key_material: bytes) -> bytes:
     return hmac.new(salt, input_key_material, hashlib.sha256).digest()
@@ -55,6 +60,21 @@ def derive_shared_key(
     ``length`` is the output size in bytes and does not depend on the curve's
     field size.
     """
+    if not isinstance(x, int) or isinstance(x, bool):
+        raise TypeError(f"x must be an int, got {type(x).__name__}")
+    if not isinstance(x_byte_length, int) or isinstance(x_byte_length, bool):
+        raise TypeError(
+            f"x_byte_length must be an int, got {type(x_byte_length).__name__}"
+        )
+    if x_byte_length <= 0:
+        raise ValueError("x_byte_length must be a positive number of bytes")
+    if x_byte_length > _MAX_X_BYTE_LENGTH:
+        raise ValueError(
+            f"x_byte_length must be at most {_MAX_X_BYTE_LENGTH} bytes, "
+            f"got {x_byte_length}"
+        )
+    if x < 0 or x.bit_length() > 8 * x_byte_length:
+        raise ValueError(f"x must fit in {x_byte_length} bytes")
     if not isinstance(context, (bytes, bytearray)):
         raise TypeError(f"context must be bytes, got {type(context).__name__}")
     if not isinstance(length, int) or isinstance(length, bool):

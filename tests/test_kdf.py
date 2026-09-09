@@ -78,6 +78,36 @@ def test_derive_shared_key_rejects_non_int_length():
         derive_shared_key(1, 21, b"ctx", length="32")  # type: ignore[arg-type]
 
 
+def test_derive_shared_key_rejects_non_int_x():
+    with pytest.raises(TypeError):
+        derive_shared_key("1", 21, b"ctx")  # type: ignore[arg-type]
+
+
+def test_derive_shared_key_rejects_negative_x():
+    with pytest.raises(ValueError):
+        derive_shared_key(-1, 21, b"ctx")
+
+
+def test_derive_shared_key_rejects_x_too_wide_for_x_byte_length():
+    with pytest.raises(ValueError):
+        derive_shared_key(2**168, 21, b"ctx")
+
+
+def test_derive_shared_key_rejects_non_int_x_byte_length():
+    with pytest.raises(TypeError):
+        derive_shared_key(1, "21", b"ctx")  # type: ignore[arg-type]
+
+
+def test_derive_shared_key_rejects_non_positive_x_byte_length():
+    with pytest.raises(ValueError):
+        derive_shared_key(1, 0, b"ctx")
+
+
+def test_derive_shared_key_rejects_x_byte_length_above_the_supported_maximum():
+    with pytest.raises(ValueError):
+        derive_shared_key(1, 4097, b"ctx")
+
+
 def test_hkdf_matches_rfc5869_test_case_1():
     pseudorandom_key = _hkdf_extract(_RFC5869_SALT, _RFC5869_IKM)
     output_key_material = _hkdf_expand(pseudorandom_key, _RFC5869_INFO, _RFC5869_LENGTH)
