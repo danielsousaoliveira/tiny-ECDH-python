@@ -1,4 +1,4 @@
-include LICENSE README.md
+include LICENSE README.md SECURITY.md
 recursive-include tests *.py
 recursive-include tiny_ecdh py.typed
 recursive-include examples *.py
