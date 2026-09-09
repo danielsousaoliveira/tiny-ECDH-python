@@ -55,6 +55,16 @@ def derive_shared_key(
     ``length`` is the output size in bytes and does not depend on the curve's
     field size.
     """
+    if not isinstance(x, int) or isinstance(x, bool):
+        raise TypeError(f"x must be an int, got {type(x).__name__}")
+    if not isinstance(x_byte_length, int) or isinstance(x_byte_length, bool):
+        raise TypeError(
+            f"x_byte_length must be an int, got {type(x_byte_length).__name__}"
+        )
+    if x_byte_length <= 0:
+        raise ValueError("x_byte_length must be a positive number of bytes")
+    if not (0 <= x < 2 ** (8 * x_byte_length)):
+        raise ValueError(f"x must fit in {x_byte_length} bytes")
     if not isinstance(context, (bytes, bytearray)):
         raise TypeError(f"context must be bytes, got {type(context).__name__}")
     if not isinstance(length, int) or isinstance(length, bool):
