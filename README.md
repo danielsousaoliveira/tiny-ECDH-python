@@ -67,7 +67,11 @@ The package is meant to be read. A useful path through it:
 
 ## Usage
 
-Install with `pip install tiny-ecdh-python` and import from `tiny_ecdh`:
+Install with `pip install tiny-ecdh-python` and import from `tiny_ecdh`. Releases
+are pre-1.0 and pre-release: the interface and the shared-secret format are not
+stable and may change without a deprecation period. See
+[`CHANGELOG.md`](CHANGELOG.md) for what changed in each version and
+[`RELEASING.md`](RELEASING.md) for how releases are built and published.
 
 ```python
 from tiny_ecdh import ecdh_generate_keys, ecdh_shared_secret
