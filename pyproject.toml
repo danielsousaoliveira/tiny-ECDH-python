@@ -1,20 +1,20 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "tiny-ecdh-python"
 dynamic = ["version"]
-description = "Educational ECDH implementation for the NIST B-163 curve"
+description = "Educational ECDH implementation (NIST B-163); not for production use"
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = []
 authors = [{name = "tiny-ECDH-python contributors"}]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Education",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.9",
@@ -24,7 +24,11 @@ classifiers = [
   "Topic :: Security :: Cryptography",
 ]
 keywords = ["ECDH", "elliptic curve", "education"]
-urls = {Homepage = "https://github.com/kokke/tiny-ECDH-c", Repository = "https://github.com/danielsousaoliveira/tiny-ECDH-python"}
+[project.urls]
+Homepage = "https://github.com/danielsousaoliveira/tiny-ECDH-python"
+Repository = "https://github.com/danielsousaoliveira/tiny-ECDH-python"
+"Upstream (tiny-ECDH-c)" = "https://github.com/kokke/tiny-ECDH-c"
+"Security policy" = "https://github.com/danielsousaoliveira/tiny-ECDH-python/blob/main/SECURITY.md"
 
 [tool.setuptools]
 packages = ["tiny_ecdh"]
