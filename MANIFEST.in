@@ -1,4 +1,6 @@
-include LICENSE README.md SECURITY.md
+include LICENSE README.md SECURITY.md CHANGELOG.md RELEASING.md
+include requirements/build.txt
 recursive-include tests *.py
 recursive-include tiny_ecdh py.typed
 recursive-include examples *.py
+recursive-include scripts *.py
