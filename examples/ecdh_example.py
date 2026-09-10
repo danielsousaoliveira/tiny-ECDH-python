@@ -1,8 +1,8 @@
 """Run a small educational B-163 ECDH exchange.
 
 Educational code only. See the README and SECURITY.md before reading further:
-this curve is withdrawn from the relevant standards and offers roughly 80-bit
-strength, and the pure-Python arithmetic cannot be made timing-uniform.
+this curve offers roughly 80-bit strength and is deprecated for new use, and the
+pure-Python arithmetic cannot be made timing-uniform.
 """
 
 from tiny_ecdh import constant_time_compare, ecdh_generate_keys, ecdh_shared_secret

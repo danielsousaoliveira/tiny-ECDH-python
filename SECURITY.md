@@ -27,8 +27,8 @@ documented, not tracked as vulnerabilities:
 
 - **Curve strength.** sect163r2 / NIST B-163 provides roughly 80 bits of security, below
   the 112-bit minimum of current guidance.
-- **Withdrawn curve.** Binary and Koblitz curves are no longer approved by NIST
-  (FIPS 186-5, SP 800-186); SEC 2 v2.0 removed the 163-bit curves.
+- **Deprecated curve.** NIST SP 800-186 still specifies the binary-field curves but
+  marks them deprecated for new use. sect163r2 remains in SEC 2 v2.0 (§3.2.3).
 - **Timing side channels.** Scalar multiplication runs a fixed schedule of point
   operations, but field inversion and field multiplication remain data-dependent, and
   CPython's big integers are not fixed-time for a fixed bit width. Secret-dependent

@@ -7,8 +7,9 @@
 >
 > - **~80-bit curve strength.** The curve is sect163r2 (NIST B-163), far below the
 >   112-bit floor any current guidance requires.
-> - **Withdrawn curve.** Binary-field curves are no longer approved by NIST
->   (FIPS 186-5, SP 800-186) and sect163r2 was dropped from SEC 2 v2.0.
+> - **Deprecated curve.** NIST SP 800-186 keeps the binary-field curves in the
+>   specification but marks them deprecated for new use; sect163r2 is still
+>   specified in SEC 2 v2.0 (§3.2.3).
 > - **Timing side channels.** The pure-Python field arithmetic cannot be made
 >   timing-uniform; secret-dependent timing is present and documented, not fixed.
 > - **No zeroisation.** Secret material is never wiped from memory.
@@ -33,12 +34,12 @@ much slower than the C version.
 The implemented curve is **sect163r2**, also published as **NIST B-163**: a pseudo-random
 (not Koblitz) curve over the binary field GF(2^163). Its parameters are taken from
 [SEC 2: Recommended Elliptic Curve Domain Parameters, Version 1.0](https://www.secg.org/SEC2-Ver-1.0.pdf)
-(§3.7.2), consistent with FIPS 186-4 Appendix D. They are pinned by
-`tests/test_curve_parameters.py`.
+(§3.4.3), consistent with FIPS 186-4 Appendix D. They are pinned by
+`tests/test_curve_parameters.py`. SEC 2 v2.0 (§3.2.3) still specifies the same curve.
 
-The curve offers roughly 80 bits of security. It has since been withdrawn: FIPS 186-5
-and NIST SP 800-186 no longer approve binary or Koblitz curves, and SEC 2 Version 2.0
-removed the 163-bit curves entirely.
+The curve offers roughly 80 bits of security, below the 112-bit minimum of current
+guidance. NIST SP 800-186 still specifies the binary-field curves but marks them
+deprecated for new use.
 
 ### Attribution and licence
 
