@@ -29,7 +29,7 @@ def test_both_parties_derive_the_same_fixed_length_key():
     key_a = secret_a.derive_key(b"purpose")
     key_b = secret_b.derive_key(b"purpose")
 
-    assert key_a == key_b
+    assert constant_time_compare(key_a, key_b)
     assert len(key_a) == DEFAULT_SHARED_KEY_LENGTH
     assert key_a != secret_a.raw_x.to_bytes(
         (secret_a.raw_x.bit_length() + 7) // 8 or 1, "big"
