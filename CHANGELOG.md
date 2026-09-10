@@ -29,6 +29,10 @@ release.
   `pyproject.toml` field.
 - Runs on numpy 1.x and numpy 2.x (the earlier `OverflowError` in
   `bitvec_clr_bit` on numpy >= 2 is fixed).
+- Published from a tag by a GitHub Actions workflow using PyPI Trusted
+  Publishing (OIDC, no stored token) with PEP 740 build provenance. The sdist
+  and wheel are byte-reproducible from the tag with the pinned build toolchain
+  in `requirements/build.txt`; CI rebuilds and compares hashes on every release.
 
 ### Interface
 

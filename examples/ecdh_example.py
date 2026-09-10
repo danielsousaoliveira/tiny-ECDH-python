@@ -15,7 +15,8 @@ def main():
     bob_private, bob_public = ecdh_generate_keys()
     alice_key = ecdh_shared_secret(alice_private, bob_public).derive_key(_CONTEXT)
     bob_key = ecdh_shared_secret(bob_private, alice_public).derive_key(_CONTEXT)
-    assert constant_time_compare(alice_key, bob_key), "derived keys differ"
+    if not constant_time_compare(alice_key, bob_key):
+        raise SystemExit("derived keys differ")
     print("derived keys match")
 
 

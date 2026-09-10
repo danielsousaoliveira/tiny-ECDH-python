@@ -73,9 +73,12 @@ to paste a token, stop.
 6. Watch the `Release` workflow:
    - `checks` runs the whole test matrix and the quality environment. Nothing
      builds or publishes if any check fails.
-   - `build` verifies the tag matches `_version.py`, builds the sdist and wheel
-     with `SOURCE_DATE_EPOCH` pinned to the tagged commit (so the build is
-     reproducible from the tag alone), and attaches provenance.
+   - `build` verifies the tag matches `_version.py`, installs the pinned build
+     toolchain (`requirements/build.txt`), then runs
+     `scripts/reproducible_build.py --check`: it builds the sdist and wheel with
+     `SOURCE_DATE_EPOCH` pinned to the tagged commit, normalises the sdist
+     tarball, and rebuilds once more, failing unless every artefact hash is
+     byte-identical. It then attaches provenance.
    - `testpypi` uploads to TestPyPI.
    - `testpypi-smoke` installs the uploaded artefact into an empty environment
      on 3.9, 3.10, 3.11 and 3.12 and runs `scripts/smoke_test.py`, which
@@ -104,8 +107,13 @@ to paste a token, stop.
 
 ```sh
 git checkout v0.1.0a1
+python -m venv /tmp/build && /tmp/build/bin/pip install --no-deps -r requirements/build.txt
 export SOURCE_DATE_EPOCH="$(git log -1 --pretty=%ct v0.1.0a1)"
-python -m build
+/tmp/build/bin/python scripts/reproducible_build.py --outdir dist --check
 ```
 
-The resulting `dist/` artefacts match those built by CI for the same tag.
+`SOURCE_DATE_EPOCH` defaults to the `HEAD` commit time if unset, so on a clean
+checkout of the tag the export is optional. The resulting `dist/` artefacts
+match those built by CI for the same tag, hash for hash. The pinned toolchain in
+`requirements/build.txt` is what makes that guarantee hold; bump it and the
+hashes change.
