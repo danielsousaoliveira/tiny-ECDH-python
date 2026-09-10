@@ -10,7 +10,7 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
-## [0.1.0a1] - unreleased
+## [0.1.0a1] - 2026-09-10
 
 First release to the Python Package Index. Alpha: published to reserve the name
 and exercise the release path, not to signal a stable interface.
