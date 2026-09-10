@@ -121,11 +121,13 @@ jobs:
                 --index-url https://test.pypi.org/simple/ \
                 --extra-index-url https://pypi.org/simple/ \
                 "tiny-ecdh-python==$VERSION"; then
-              break
+              exit 0
             fi
             echo "attempt $attempt failed, waiting for TestPyPI to propagate"
             sleep 20
           done
+          echo "tiny-ecdh-python==$VERSION did not install from TestPyPI after 6 attempts"
+          exit 1
       - name: Full key exchange using only the installed package
         run: |
           VERSION="${GITHUB_REF_NAME#v}"

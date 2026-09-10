@@ -28,6 +28,9 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 
+_GZIP_OS_BYTE = 9
+_GZIP_OS_UNKNOWN = 0xFF
+
 
 def source_date_epoch() -> int:
     env = os.environ.get("SOURCE_DATE_EPOCH")
@@ -68,7 +71,9 @@ def normalize_sdist(path: Path, epoch: int) -> None:
             data = payloads[member.name]
             tf.addfile(info, io.BytesIO(data) if data is not None else None)
 
-    path.write_bytes(gzip.compress(raw.getvalue(), mtime=0))
+    compressed = bytearray(gzip.compress(raw.getvalue(), mtime=0))
+    compressed[_GZIP_OS_BYTE] = _GZIP_OS_UNKNOWN
+    path.write_bytes(bytes(compressed))
 
 
 def build(outdir: Path, epoch: int) -> list[Path]:
