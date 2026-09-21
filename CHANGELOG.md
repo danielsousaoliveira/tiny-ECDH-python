@@ -10,6 +10,13 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-21
+
+First stable release. No functional changes since 0.1.0a1: the alpha exercised
+the release path and reserved the name, and this promotes that same interface
+to stable. See [0.1.0a1](#010a1---2026-09-10) below for the full description
+of what the interface contains.
+
 ## [0.1.0a1] - 2026-09-10
 
 First release to the Python Package Index. Alpha: published to reserve the name
@@ -72,5 +79,6 @@ release.
   documented, not eliminated.
 - No zeroisation of secret material. No independent review.
 
-[Unreleased]: https://github.com/danielsousaoliveira/tiny-ECDH-python/compare/v0.1.0a1...HEAD
+[Unreleased]: https://github.com/danielsousaoliveira/tiny-ECDH-python/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/danielsousaoliveira/tiny-ECDH-python/compare/v0.1.0a1...v0.1.0
 [0.1.0a1]: https://github.com/danielsousaoliveira/tiny-ECDH-python/releases/tag/v0.1.0a1
